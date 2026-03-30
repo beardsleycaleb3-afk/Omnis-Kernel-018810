@@ -164,7 +164,7 @@ const KERNEL_DATA = {
     ],
 
     config: {
-        version: "018810_ULTIMA",
+        version: "Omnis-Kernel-018810",
         parity: 300,
         limit: "SHANNON_BREAK_GEOMETRIC"
     }
