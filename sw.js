@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Omnis-Kernel-018810-v13';
+const CACHE_NAME = 'Omnis-Kernel-018810-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,7 @@ const ASSETS = [
   './icon.png',
   './3pm.mp3',
   './Omnis-Kernel.mp3',
-  './data.js',
+  './data.js'
 ];
 
 // Force immediate activation of the new kernel
