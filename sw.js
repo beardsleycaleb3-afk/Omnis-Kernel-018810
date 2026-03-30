@@ -5,8 +5,8 @@ const ASSETS = [
   './manifest.json',
   './icon.png',
   './3pm.mp3',
-  './Omnis-Kernel.mp3,
-  './data.js'
+  './Omnis-Kernel.mp3',
+  './data.js',
 ];
 
 // Force immediate activation of the new kernel
