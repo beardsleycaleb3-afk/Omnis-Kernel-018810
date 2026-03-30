@@ -1,0 +1,17 @@
+{
+  "name": "Omnis-Kernel 018810",
+  "short_name": "018810",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#00ff00",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192/000/0f0?text=01",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
