@@ -5,7 +5,7 @@ const ASSETS = [
   './manifest.json',
   './icon.png',
   './3pm.mp3',
-  './Omnis-Kernel.mp3
+  './Omnis-Kernel.mp3,
   './data.js'
 ];
 
