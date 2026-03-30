@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <title>Omnis-Kernel-018810</title>
+    <style>
+        :root { --glow: #0f0; --bg: #000; }
+        * { box-sizing: border-box; touch-action: none; }
+        body { 
+            margin:0; background:var(--bg); color:var(--glow); 
+            font-family:monospace; display: flex; justify-content: center; 
+            align-items: center; height: 100vh; overflow: hidden;
+        }
+        #monitor-frame {
+            position: relative; width: 400px; height: 500px;
+            border: 3px solid var(--glow);
+            box-shadow: 0 0 20px var(--glow), inset 0 0 10px var(--glow);
+            background: #050505; overflow: hidden;
+        }
+        #console-hud {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(0, 40, 0, 0.9); border-bottom: 1px solid var(--glow);
+            padding: 5px; font-size: 9px; z-index: 10;
+            display: flex; justify-content: space-between; box-sizing: border-box;
+        }
+        canvas { display: block; width: 400px; height: 500px; }
+        .btn-ui {
+            background: var(--glow); color: #000; border: none;
+            font-size: 8px; font-weight: bold; padding: 2px 5px; cursor: pointer;
+        }
+        #audio-interface {
+            position: absolute; bottom: 10px; width: 100%;
+            padding: 0 10px; display: flex; gap: 5px; z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+<div id="monitor-frame">
+    <div id="console-hud">
+        <div>SYS: Omnis-Kernel-018810<br>DATA: <span id="count">0</span></div>
+        <div style="text-align: right;">
+            <button class="btn-ui" onclick="location.reload()">RESET</button><br>
+            <button class="btn-ui" onclick="exportData()" style="margin-top:2px">LOG</button>
+        </div>
+    </div>
+    <canvas id="c"></canvas>
+    <div id="audio-interface">
+        <input type="file" id="mp3-input" accept="audio/*" style="display:none;">
+        <button class="btn-ui" onclick="document.getElementById('mp3-input').click()">LOAD 3pm.mp3 / OMNIS</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const countDisp = document.getElementById('count');
+    const mp3Input = document.getElementById('mp3-input');
+
+    canvas.width = 400;
+    canvas.height = 500;
+
+    let dataLog = [];
+    let audioObj;
+
+    // 018810 LINGUISTIC MAP FOR 3pm.mp3
+    const kernelLyrics = [
+        { t: 0.5, text: "018810" },
+        { t: 4.2, text: "Mirror Code" },
+        { t: 10.5, text: "Shannon Limit" },
+        { t: 15.1, text: "Geometric Parity" },
+        { t: 22.8, text: "Omnis" }
+        // The Kernel adds more triggers here based on track timing
+    ];
+
+    function runKernel(x, y, source = "input") {
+        const rect = canvas.getBoundingClientRect();
+        const rx = x - rect.left;
+        const ry = y - rect.top;
+        const mx = 400 - rx;
+        const my = 500 - ry;
+
+        dataLog.push({t: Date.now(), x: rx.toFixed(2), y: ry.toFixed(2), mx: mx.toFixed(2), my: my.toFixed(2), src: source});
+        countDisp.innerText = dataLog.length;
+
+        ctx.fillStyle = "#0f0"; ctx.fillRect(rx-2, ry-2, 4, 4);
+        ctx.fillStyle = "#fff"; ctx.fillRect(mx-2, ry-2, 4, 4);
+    }
+
+    function setupAudio(file) {
+        const url = URL.createObjectURL(file);
+        audioObj = new Audio(url);
+        audioObj.play();
+        
+      
+        audioObj.ontimeupdate = () => {
+            const current = audioObj.currentTime;
+            kernelLyrics.forEach(phrase => {
+                // Trigger burst if within 0.1s of word timestamp
+                if (Math.abs(current - phrase.t) < 0.1) {
+                    // Map word length/content to unique screen coordinates
+                    let val = phrase.text.length * 25;
+                    runKernel(val + canvas.getBoundingClientRect().left, val + canvas.getBoundingClientRect().top, phrase.text);
+                }
+            });
+        };
+
+        audioObj.onended = () => exportData();
+    }
+
+    function exportData() {
+        if (dataLog.length === 0) return;
+        const blob = new Blob([JSON.stringify(dataLog)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Omnis-Kernel-018810_WordLog.json';
+        a.click();
+    }
+
+    // Touch still drives the screen simultaneously
+    canvas.addEventListener('pointermove', (e) => { if (e.buttons > 0) runKernel(e.clientX, e.clientY, "touch"); });
+    mp3Input.addEventListener('change', (e) => { if (e.target.files[0]) setupAudio(e.target.files[0]); });
+
+    function animate() {
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0,0,400,500);
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+</script>
+</body>
+</html>
