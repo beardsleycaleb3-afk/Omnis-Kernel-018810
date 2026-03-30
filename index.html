@@ -26,7 +26,7 @@
             flex: 1;
             position: relative; 
             background: #000; 
-            border-bottom: 4px solid #111;
+            border-bottom: 10px solid #111;
             min-height: 0;
         }
         canvas { 
@@ -51,7 +51,7 @@
         }
         #deck { 
             width: 100%; 
-            height: 160px; 
+            height: 100px; 
             background: var(--shell); 
             display: flex; 
             flex-direction: column; 
@@ -64,14 +64,14 @@
             height: 100%; 
             align-items: center; 
         }
-        #dpad { width: 90px; height: 90px; position: relative; margin-left: 15px; }
-        .d-btn { position: absolute; background: #111; width: 30px; height: 30px; border: 1px solid #444; border-radius: 5px; display: flex; justify-content: center; align-items: center; }
-        #du { top: 0; left: 30px; } #dd { bottom: 0; left: 30px; }
-        #dl { top: 30px; left: 0; } #dr { top: 30px; right: 0; }
+        #dpad { width: 60px; height: 60px; position: relative; margin-left: 10px; }
+        .d-btn { position: absolute; background: #111; width: 20px; height: 20px; border: 1px solid #444; border-radius: 5px; display: flex; justify-content: center; align-items: center; }
+        #du { top: 0; left: 20px; } #dd { bottom: 0; left: 30px; }
+        #dl { top: 20px; left: 0; } #dr { top: 30px; right: 0; }
         .sys-btns { display: flex; flex-direction: column; gap: 25px; align-items: center; }
-        .s-btn { width: 30px; height: 12px; background: #444; border-radius: 10px; transform: rotate(-15deg); border: 1px solid #222; display: flex; justify-content: center; align-items: center; font-size: 8px;}
-        #action { position: relative; width: 90px; height: 90px; margin-right: 15px; justify-self: end; }
-        .a-btn { width: 35px; height: 35px; background: #8b1e2f; border-radius: 50%; position: absolute; border: 6px solid #444; display: flex; justify-content: center; align-items: center;}
+        .s-btn { width: 20px; height: 12px; background: #444; border-radius: 10px; transform: rotate(-15deg); border: 1px solid #222; display: flex; justify-content: center; align-items: center; font-size: 8px;}
+        #action { position: relative; width: 60px; height: 60px; margin-right: 10px; justify-self: end; }
+        .a-btn { width: px; height: 20px; background: #8b1e2f; border-radius: 50%; position: absolute; border: 6px solid #444; display: flex; justify-content: center; align-items: center;}
         #btnB { bottom: 5px; left: 0; } #btnA { top: 5px; right: 0; }
     </style>
 </head>
@@ -97,8 +97,8 @@
                 <div id="zoom-in" class="s-btn">➕</div>
             </div>
             <div id="action">
-                <div id="btnB" class="a-btn">B</div>
-                <div id="btnA" class="a-btn">A</div>
+                <div id="btnB" class="a-btn">🌶️</div>
+                <div id="btnA" class="a-btn">👻</div>
             </div>
         </div>
     </div>
@@ -206,9 +206,9 @@
             }
             scene.rotation.y += 0.003;
             renderer.render(scene, camera);
+    
         }
-
-        // Mobile controls
+        
         const touch = (id, fn) => document.getElementById(id).addEventListener('pointerdown', (e) => { 
             e.preventDefault(); 
             fn(); 
@@ -219,10 +219,11 @@
         touch('dr', () => scene.rotation.y += 0.1);
         touch('zoom-in', () => camera.position.z -= 5);
         touch('zoom-out', () => camera.position.z += 5);
+        
     </script>
-
-    <!-- SERVICE WORKER (clean, no extra braces) -->
+    
     <script>
+        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -233,4 +234,6 @@
     </script>
 
 </body>
+
+    
 </html>
