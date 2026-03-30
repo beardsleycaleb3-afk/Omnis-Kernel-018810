@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <title>Omnis-Kernel-018810</title>
+    <style>
+        :root { --glow: #0f0; --bg: #000; }
+        * { box-sizing: border-box; touch-action: none; }
+        body { 
+            margin:0; background:var(--bg); color:var(--glow); 
+            font-family:monospace; display: flex; justify-content: center; 
+            align-items: center; height: 100vh; overflow: hidden;
+        }
+        #monitor-frame {
+            position: relative; width: 400px; height: 500px;
+            border: 3px solid var(--glow);
+            box-shadow: 0 0 20px var(--glow), inset 0 0 10px var(--glow);
+            background: #050505; overflow: hidden;
+        }
+        #console-hud {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(0, 40, 0, 0.9); border-bottom: 1px solid var(--glow);
+            padding: 5px; font-size: 9px; z-index: 10;
+            display: flex; justify-content: space-between; box-sizing: border-box;
+        }
+        canvas { display: block; width: 400px; height: 500px; }
+        .btn-ui {
+            background: var(--glow); color: #000; border: none;
+            font-size: 8px; font-weight: bold; padding: 2px 5px; cursor: pointer;
+        }
+        #audio-interface {
+            position: absolute; bottom: 10px; width: 100%;
+            padding: 0 10px; display: flex; gap: 5px; z-index: 20;
+        }
+        #energy-bars {
+            position: absolute; right: 10px; top: 50px; z-index: 15;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .energy-bar { width: 4px; height: 30px; background: rgba(0,255,0,0.3); transition: height 0.1s; }
+    </style>
+</head>
+<body>
+
+<div id="monitor-frame">
+    <div id="console-hud">
+        <div>SYS: Omnis-Kernel-018810<br>PTS: <span id="count">0</span> | BASS:<span id="bass">0</span> TREB:<span id="treb">0</span></div>
+        <div style="text-align: right;">
+            <button class="btn-ui" onclick="location.reload()">RESET</button><br>
+            <button class="btn-ui" onclick="exportData()" style="margin-top:2px">LOG</button>
+        </div>
+    </div>
+    <canvas id="c"></canvas>
+    <div id="energy-bars">
+        <div class="energy-bar" id="bass-bar"></div>
+        <div class="energy-bar" id="treb-bar"></div>
+    </div>
+    <div id="audio-interface">
+        <input type="file" id="audio-file" accept="audio/*" style="display:none;">
+        <button class="btn-ui" onclick="document.getElementById('audio-file').click()">LOAD 3PM</button>
+        <button class="btn-ui" id="play-pause">PLAY</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const countEl = document.getElementById('count');
+    const bassEl = document.getElementById('bass');
+    const trebEl = document.getElementById('treb');
+    const playBtn = document.getElementById('play-pause');
+    const bassBar = document.getElementById('bass-bar');
+    const trebBar = document.getElementById('treb-bar');
+    const fileInput = document.getElementById('audio-file');
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 400 * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    let dataLog = [];
+    let audio = null;
+    let audioCtx = null;
+    let analyser = null;
+    let source = null;
+    let dataArray = null;
+    let particles = [];
+    let isPlaying = false;
+    let rafId = null;
+
+    class Particle {
+        constructor(x, y, vx = 0, vy = 0, life = 1, size = 2) {
+            this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+            this.life = life; this.maxLife = life; this.size = size;
+            this.decay = 0.97 + Math.random() * 0.02;
+        }
+        update(bass, treb) {
+            this.vx += (Math.sin(Date.now() * 0.01 + this.x * 0.01) * bass * 0.3);
+            this.vy += (Math.cos(Date.now() * 0.01 + this.y * 0.01) * treb * 0.2);
+            this.x += this.vx; this.y += this.vy;
+            this.vx *= 0.96; this.vy *= 0.96;
+            this.life *= this.decay;
+            this.size *= 0.995;
+        }
+        draw() {
+            const alpha = this.life / this.maxLife;
+            ctx.save();
+            ctx.globalAlpha = alpha * alpha;
+            const hue = 120 + (this.life * 60);
+            ctx.fillStyle = `hsl(${hue}, 100%, ${40 + alpha * 40}%)`;
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+            ctx.shadowBlur = 8 * alpha;
+            ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+            ctx.restore();
+        }
+    }
+
+    function setupAudio(file) {
+        if (audio) audio.pause();
+        const url = URL.createObjectURL(file);
+        audio = new Audio(url);
+        audio.crossOrigin = "anonymous";
+        
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.85;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        source = audioCtx.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        
+        playBtn.textContent = 'PLAY';
+        playBtn.onclick = () => togglePlay();
+    }
+
+    function togglePlay() {
+        if (!audioCtx) return;
+        if (isPlaying) {
+            audio.pause();
+            audioCtx.suspend();
+            playBtn.textContent = 'PLAY';
+        } else {
+            audio.play();
+            audioCtx.resume();
+            playBtn.textContent = 'PAUSE';
+        }
+        isPlaying = !isPlaying;
+    }
+
+    function getAudioData() {
+        if (!analyser) return { bass: 0, treb: 0 };
+        analyser.getByteFrequencyData(dataArray);
+        const bassAvg = dataArray.slice(0, 40).reduce((a,b)=>a+b,0) / (40*255);
+        const trebAvg = dataArray.slice(200, analyser.frequencyBinCount).reduce((a,b)=>a+b,0) / ((analyser.frequencyBinCount-200)*255);
+        return { bass: bassAvg, treb: trebAvg };
+    }
+
+    function touchBurst(x, y) {
+        const rect = canvas.getBoundingClientRect();
+        const rx = (x - rect.left) * (400 / rect.width);
+        const ry = (y - rect.top) * (500 / rect.height);
+        
+        dataLog.push({t: Date.now(), x: rx.toFixed(1), y: ry.toFixed(1), src: 'touch'});
+        countEl.textContent = dataLog.length;
+        
+        // Massive touch explosion
+        for (let i = 0; i < 50; i++) {
+            const angle = (i / 50) * Math.PI * 2;
+            const speed = 2 + Math.random() * 6;
+            const size = 1 + Math.random() * 4;
+            particles.push(new Particle(rx, ry, 
+                Math.cos(angle) * speed, Math.sin(angle) * speed, 1, size));
+        }
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(5,5,10,0.2)';
+        ctx.fillRect(0, 0, 400, 500);
+        
+        const { bass, treb } = getAudioData();
+        bassEl.textContent = (bass*100).toFixed(0);
+        trebEl.textContent = (treb*100).toFixed(0);
+        
+        bassBar.style.height = `${bass * 40}px`;
+        bassBar.style.background = `hsl(0, 80%, ${20 + bass*60}%)`;
+        trebBar.style.height = `${treb * 40}px`;
+        trebBar.style.background = `hsl(120, 80%, ${20 + treb*60}%)`;
+        
+        // Audio-driven particle emission
+        const emitCount = Math.floor((bass + treb) * 25);
+        for (let i = 0; i < emitCount; i++) {
+            const x = Math.random() * 400;
+            const y = Math.random() * 500;
+            const size = 1 + bass * 3;
+            particles.push(new Particle(x, y, 
+                (Math.random()-0.5)*bass*12, 
+                (Math.random()-0.5)*treb*10, 1, size));
+        }
+        
+        // Update particles
+        particles = particles.filter(p => {
+            p.update(bass, treb);
+            if (p.life > 0.02 && p.x > -50 && p.x < 450 && p.y > -50 && p.y < 550) {
+                p.draw();
+                return true;
+            }
+            return false;
+        });
+        
+        rafId = requestAnimationFrame(animate);
+    }
+
+    function exportData() {
+        if (!dataLog.length) return;
+        const blob = new Blob([JSON.stringify(dataLog, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Omnis-Kernel-${Date.now()}.json`;
+        a.click();
+    }
+
+    // Events
+    canvas.addEventListener('pointerdown', e => touchBurst(e.clientX, e.clientY));
+    canvas.addEventListener('pointermove', e => {
+        if (e.buttons > 0) touchBurst(e.clientX, e.clientY);
+    });
+    
+    fileInput.addEventListener('change', e => {
+        if (e.target.files[0]) {
+            setupAudio(e.target.files[0]);
+            if (rafId) cancelAnimationFrame(rafId);
+            animate();
+        }
+    });
+
+    // Android Chrome SW
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js', {scope: './'}).catch(() => {});
+    }
+
+    animate();
+</script>
+</body>
+</html>
