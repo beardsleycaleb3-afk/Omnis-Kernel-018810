@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Omnis-Kernel-018810-v12';
+const CACHE_NAME = 'Omnis-Kernel-018810-v13';
 const ASSETS = [
   './',
   './index.html',
