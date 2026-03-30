@@ -1,29 +1,57 @@
 <!DOCTYPE html>
+
 <html lang="en">
+    
 <head>
+    
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
+    
     <meta name="theme-color" content="#00ff00">
+    
     <title>Omnis-Kernel-018810</title>
+    
     <style>
+        
         :root { --glow: #0f0; --bg: #000; }
+        
         * { box-sizing: border-box; touch-action: none; }
+        
         body { 
-            margin:0; background:var(--bg); color:var(--glow); 
+            
+            margin:0; background:var(--bg); color:var(--glow);
+            
             font-family:monospace; display: flex; justify-content: center; 
+            
             align-items: center; height: 100vh; overflow: hidden;
-        }
 
-        /* FORCED 300x300 MONITOR CONTAINER */
+            
+        }
+        
+
         #monitor-frame {
+            
             position: relative;
-            width: 300px;
-            height: 300px;
+            
+            width: 400px;
+            
+            height: 500px;
+            
+            box-shadow: 0 0 var(--glow-blur) var(--glow), inset 0 0 10px var(--glow);
+            
+            transition: box-shadow 0.05s ease-out;
+            
             border: 3px solid var(--glow);
+            
             box-shadow: 0 0 20px var(--glow), inset 0 0 10px var(--glow);
+            
             background: #050505;
+            
             overflow: hidden;
+
+            
         }
 
         #console-hud {
@@ -34,7 +62,7 @@
             display: flex; justify-content: space-between; box-sizing: border-box;
         }
 
-        canvas { display: block; width: 300px; height: 300px; touch-action: none; }
+        canvas { display: block; width: 500px; height: 600px; touch-action: none; }
 
         .btn-ui {
             background: var(--glow); color: #000; border: none;
