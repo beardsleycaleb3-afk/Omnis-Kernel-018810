@@ -166,6 +166,6 @@ const KERNEL_DATA = {
     config: {
         version: "Omnis-Kernel-018810",
         parity: 300,
-        limit: "SHANNON_BREAK_GEOMETRIC"
+        
     }
 };
