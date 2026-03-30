@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <title>Omnis-Kernel-018810</title>
+</head>
+<body style="margin:0; background:#000; color:#0f0; font-family:monospace; overflow:hidden; touch-action:none;">
+
+<div style="position:absolute; top:0; left:0; width:100%; background:rgba(0,40,0,0.95); border-bottom:2px solid #0f0; padding:12px; font-size:10px; z-index:1000; display:grid; grid-template-columns: 1fr 1fr 1fr;">
+    <div id="sys">OS: 018810_ULTIMA<br>KERNEL: SYMMETRIC<br>MODE: AUDIO_BPM</div>
+    <div id="hex_val" style="text-align:center; font-size:14px; color:#fff;">[0x0000]</div>
+    <div id="perf" style="text-align:right;">FPS: 60.0<br>STATUS: <span id="status">WAITING</span><br>PARITY: VERIFIED</div>
+</div>
+
+<div id="log" style="position:absolute; bottom:180px; left:10px; width:180px; height:80px; color:#0f0; font-size:9px; border-left:2px solid #0f0; padding-left:5px; overflow:hidden; pointer-events:none;">
+    [BOOT_SEQUENCE_COMPLETE]
+</div>
+
+<div id="ui-overlay" style="position:absolute; bottom:20px; width:100%; display:flex; justify-content:center; gap:10px; z-index:2000;">
+    <input type="file" id="mp3-input" accept="audio/*" style="display:none;">
+    <button onclick="document.getElementById('mp3-input').click()" style="background:#0f0; border:none; padding:10px; font-family:monospace; font-weight:bold; cursor:pointer;">LOAD 3pm.mp3</button>
+    <button id="play-btn" style="background:#0f0; border:none; padding:10px; font-family:monospace; font-weight:bold; cursor:pointer;">PLAY / PAUSE</button>
+    <button onclick="exportData()" style="background:#fff; border:none; padding:10px; font-family:monospace; font-weight:bold; cursor:pointer;">LOG DATA</button>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const hexVal = document.getElementById('hex_val');
+const log = document.getElementById('log');
+const mp3Input = document.getElementById('mp3-input');
+const playBtn = document.getElementById('play-btn');
+const statusDisp = document.getElementById('status');
+
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+let frames = 0;
+let dataLog = [];
+let audioCtx, analyzer, dataArray, source, audioEl;
+
+function pushLog(m) {
+    let d = document.createElement('div');
+    d.innerText = `> ${m}`;
+    log.prepend(d);
+    if(log.childNodes.length > 6) log.lastChild.remove();
+}
+
+function executeOS(x, y, src = "USER") {
+    let mx = w - x;
+    let my = h - y;
+    
+    // Hex 
+    hexVal.innerText = `[0x${Math.floor(x + y).toString(16).toUpperCase()}]`;
+
+    // 018810 Recursive Symmetry Lines
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.beginPath();
+    ctx.moveTo(x, y); ctx.lineTo(mx, y); // Horizontal Mirror
+    ctx.moveTo(x, y); ctx.lineTo(x, my); // Vertical Mirror
+    ctx.stroke();
+
+    // Data Nodes (The Logic Seeds)
+    ctx.fillStyle = "#fff"; ctx.fillRect(x-4, y-4, 8, 8); // Primary
+    ctx.fillStyle = "#0f0"; ctx.fillRect(mx-4, y-4, 8, 8); // X-Mirror
+    ctx.fillStyle = "#0f0"; ctx.fillRect(x-4, my-4, 8, 8); // Y-Mirror
+    ctx.fillStyle = "#fff"; ctx.fillRect(mx-4, my-4, 8, 8); // XY-Mirror
+
+    // Log the packet
+    dataLog.push({t: Date.now(), x: x.toFixed(2), y: y.toFixed(2), src: src});
+}
+
+function setupAudio(file) {
+    if (audioEl) audioEl.pause();
+    const url = URL.createObjectURL(file);
+    audioEl = new Audio(url);
+    
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyzer = audioCtx.createAnalyser();
+    analyzer.fftSize = 256;
+    dataArray = new Uint8Array(analyzer.frequencyBinCount);
+
+    source = audioCtx.createMediaElementSource(audioEl);
+    source.connect(analyzer);
+    analyzer.connect(audioCtx.destination);
+
+    statusDisp.innerText = "STREAMING";
+    pushLog("AUDIO_KERNEL_LINKED");
+    
+    audioEl.play();
+    driveWithBPM();
+}
+
+function driveWithBPM() {
+    if (!analyzer) return;
+    analyzer.getByteFrequencyData(dataArray);
+    
+    let bass = dataArray[2]; // BPM Trigger
+    let mid = dataArray[50];  // Movement Logic
+    
+    if (bass > 110) {
+        // Map BPM to ULTIMA Geometry
+        let ax = (w / 2) + (bass - 128) * (w / 255);
+        let ay = (h / 2) + (mid - 128) * (h / 255);
+        executeOS(ax, ay, "BPM_CORE");
+        
+        if(frames % 20 === 0) pushLog(`BPM_PULSE_${bass}`);
+    }
+    requestAnimationFrame(driveWithBPM);
+}
+
+function exportData() {
+    const blob = new Blob([JSON.stringify(dataLog)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Omnis-Kernel_LOG.json`;
+    a.click();
+}
+
+playBtn.onclick = () => {
+    if(!audioEl) return;
+    if(audioEl.paused) { audioCtx.resume(); audioEl.play(); }
+    else { audioEl.pause(); }
+};
+
+mp3Input.addEventListener('change', (e) => {
+    if (e.target.files[0]) setupAudio(e.target.files[0]);
+});
+
+// Mobile Touch Interaction
+window.addEventListener('pointermove', (e) => {
+    if (e.buttons > 0) {
+        executeOS(e.clientX, e.clientY, "TOUCH");
+        if(frames % 50 === 0) pushLog(`TOUCH_PUSH_${Math.floor(e.clientX)}`);
+    }
+});
+
+function loop() {
+    frames++;
+    ctx.fillStyle = "rgba(0, 10, 0, 0.12)";
+    ctx.fillRect(0, 0, w, h);
+    
+    // Background Logic Grid
+    ctx.strokeStyle = "rgba(0, 255, 0, 0.05)";
+    for(let i=0; i<w; i+=w/12) { 
+        ctx.beginPath();
+        ctx.moveTo(i, 0); ctx.lineTo(i, h);
+        ctx.stroke();
+    }
+    requestAnimationFrame(loop);
+}
+
+loop();
+
+// Ensure sw.js is still registered
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
