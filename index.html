@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Omnis-Kernel-018810</title>
+    <style>
+        :root { --p-green: #9bbc0f; --d-green: #0f380f; --shell: #2a2a2a; }
+        body { margin: 0; background: #000; color: var(--p-green); font-family: monospace; overflow: hidden; touch-action: none; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        
+        #monitor-frame { width: 400px; height: 500px; background: #333; border: 16px solid #1a1a1a; border-radius: 4px; position: relative; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,1); }
+        #viewport { width: 360px; height: 460px; background: var(--d-green); border: 2px solid #000; position: relative; overflow: hidden; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+        #ui-layer { pointer-events: none; padding: 8px; font-size: 10px; color: var(--p-green); z-index: 10; position: absolute; top: 0; left: 0; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; }
+        
+        #deck { width: 100%; height: 150px; background: var(--shell); display: flex; flex-direction: column; border-top: 4px solid #111; }
+        #analyzer-strip { height: 35px; background: #051a05; margin: 5px 10px; border: 6px solid var(--p-green); }
+        #controls { display: grid; grid-template-columns: 1fr 1fr 1fr; height: 105px; align-items: center; }
+        #dpad { width: 85px; height: 85px; position: relative; margin-left: 20px; }
+        .d-btn { position: absolute; background: #111; width: 28px; height: 28px; border: 1px solid #444; border-radius: 4px; }
+        #du { top: 0; left: 28px; } #dd { bottom: 0; left: 28px; } #dl { top: 28px; left: 0; } #dr { top: 28px; right: 0; }
+        
+        .sys-btns { display: flex; flex-direction: column; gap: 30px; align-items: center; }
+        .s-btn { width: 20px; height: 10px; background: #444; border-radius: 44px; transform: rotate(-15deg); font-size: 20px; color: #aaa; text-align: center; border: 6px solid #222; }
+        
+        #action { position: relative; width: 85px; height: 85px; margin-right: 20px; justify-self: end; }
+        .a-btn { width: 30px; height: 30px; background: #8b1e2f; border-radius: 50%; position: absolute; line-height: 30px; text-align: center; font-weight: bold; color: #111; border: 8px solid #5a131e; box-shadow: 0 4px #440a13; }
+        #btnB { bottom: 2px; left: 0; } #btnA { top: 2px; right: 0; }
+    </style>
+</head>
+<body>
+
+<div id="monitor-frame">
+    <div id="viewport">
+        <canvas id="main-canvas"></canvas>
+        <div id="ui-layer">
+            <span id="stat-fps">FPS: --</span>
+            <span id="stat-time">0.00s</span>
+        </div>
+    </div>
+</div>
+
+<div id="deck">
+    <div id="analyzer-strip"><canvas id="f-canvas"></canvas></div>
+    <div id="controls">
+        <div id="dpad">
+            <div id="du" class="d-btn">⬆️</div><div id="dd" class="d-btn">⬇️</div>
+            <div id="dl" class="d-btn">⬅️</div><div id="dr" class="d-btn">➡️</div>
+        </div>
+        <div class="sys-btns">
+            <div id="sel" class="s-btn">-</div>
+            <div id="str" class="s-btn">+</div>
+        </div>
+        <div id="action">
+            <div id="btnB" class="a-btn">💾</div>
+            <div id="btnA" class="a-btn">👻</div>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="loader" accept="audio/*" style="display:none">
+
+<script>
+// --- POINT GENERATION (300 POINTS) ---
+const getShell = (count, r) => {
+    let pts = [];
+    const gr = (1 + Math.sqrt(5)) / 2;
+    for (let i = 0; i < count; i++) {
+        let theta = 2 * Math.PI * i / gr;
+        let phi = Math.acos(1 - 2 * (i + 0.5) / count);
+        pts.push({ x: r * Math.cos(theta) * Math.sin(phi), y: r * Math.sin(theta) * Math.sin(phi), z: r * Math.cos(phi) });
+    }
+    return pts;
+};
+
+const points = { outer: getShell(100, 25), mid: getShell(100, 15), inner: getShell(100, 5) };
+let audio, aCtx, analyzer, data, isPlaying = false, zoom = 1, rotX = 0, rotY = 0, frameTimes = [];
+const canvas = document.getElementById('main-canvas'), ctx = canvas.getContext('2d');
+const fCanvas = document.getElementById('f-canvas'), fCtx = fCanvas.getContext('2d');
+canvas.width = 360; canvas.height = 460;
+fCanvas.width = 380; fCanvas.height = 35;
+
+// --- PROJECTION ENGINE ---
+function project(p, baseScale) {
+    let s = baseScale * zoom;
+    let cx = Math.cos(rotX), sx = Math.sin(rotX), cy = Math.cos(rotY), sy = Math.sin(rotY);
+    let x1 = p.x * cy - p.z * sy;
+    let z1 = p.x * sy + p.z * cy;
+    let y1 = p.y * cx - z1 * sx;
+    return { x: 180 + x1 * s, y: 230 + y1 * s };
+}
+
+// --- TOUCH BINDINGS ---
+const touch = (id, fn) => { document.getElementById(id).onpointerdown = (e) => { e.preventDefault(); fn(); }; };
+
+touch('btnA', () => { if(!audio) return document.getElementById('loader').click(); isPlaying = !isPlaying; isPlaying ? audio.play() : audio.pause(); });
+touch('btnB', () => { if(!audio) return; const blob = new Blob([JSON.stringify({t: audio.currentTime, parity: "018810"})]); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "kernel_log.json"; a.click(); });
+
+document.getElementById('loader').onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    audio = new Audio(URL.createObjectURL(file));
+    aCtx = new AudioContext();
+    analyzer = aCtx.createAnalyser();
+    aCtx.createMediaElementSource(audio).connect(analyzer);
+    analyzer.connect(aCtx.destination);
+    data = new Uint8Array(analyzer.frequencyBinCount);
+    audio.play(); isPlaying = true;
+    requestAnimationFrame(loop);
+};
+
+function loop() {
+    const now = performance.now();
+    while(frameTimes.length > 0 && frameTimes[0] <= now - 1000) frameTimes.shift();
+    frameTimes.push(now);
+    document.getElementById('stat-fps').innerText = `FPS: ${frameTimes.length}`;
+    if(audio) document.getElementById('stat-time').innerText = `${audio.currentTime.toFixed(2)}s`;
+
+    ctx.fillStyle = "rgba(15, 56, 15, 0.45)";
+    ctx.fillRect(0,0,360,460);
+
+    if(analyzer) {
+        analyzer.getByteFrequencyData(data);
+        let b = data[2]/255, m = data[20]/255, t = data[50]/255;
+
+        // Wormhole Pulse
+        if(b > 0.8) {
+            ctx.beginPath();
+            let g = ctx.createRadialGradient(180, 230, 0, 180, 230, 180 * b);
+            g.addColorStop(0, "rgba(155, 188, 15, 0.3)");
+            g.addColorStop(1, "transparent");
+            ctx.fillStyle = g; ctx.arc(180, 230, 180 * b, 0, 7); ctx.fill();
+        }
+
+        // Geometric Parity Render
+        [[points.outer, 5, b], [points.mid, 8, m], [points.inner, 12, t]].forEach(([arr, scale, f]) => {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(155, 188, 15, ${0.4 + f})`;
+            arr.forEach((p, i) => {
+                let pr = project(p, scale + f * 5);
+                if(i === 0) ctx.moveTo(pr.x, pr.y); else ctx.lineTo(pr.x, pr.y);
+            });
+            ctx.stroke();
+        });
+
+        // Analyzer Strip
+        fCtx.fillStyle = "#051a05"; fCtx.fillRect(0,0,380,35);
+        for(let i=0; i<64; i++) {
+            let h = (data[i]/255) * 35;
+            fCtx.fillStyle = "#9bbc0f"; fCtx.fillRect(i*6, 35-h, 4, h);
+        }
+    }
+    requestAnimationFrame(loop);
+}
+
+touch('du', () => rotX -= 0.2); touch('dd', () => rotX += 0.2);
+touch('dl', () => rotY -= 0.2); touch('dr', () => rotY += 0.2);
+touch('sel', () => zoom -= 0.1); touch('str', () => zoom += 0.1);
+// --- SERVICE WORKER REGISTRATION ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Kernel 018810 Offline-Ready:', reg.scope))
+            .catch(err => console.log('SW Parity Error:', err));
+    });
+}
+
+  
+</script>
+  
+</body>
+</html>
