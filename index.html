@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <title>Omnis-Kernel-018810</title>
+    <style>
+        :root { --glow: #0f0; --bg: #000; --glow-blur: 20px; }
+        * { box-sizing: border-box; touch-action: none; }
+        body { 
+            margin:0; background:var(--bg); color:var(--glow); 
+            font-family:monospace; display: flex; justify-content: center; 
+            align-items: center; height: 100vh; overflow: hidden;
+        }
+
+        /* UPDATED 400x500 MONITOR */
+        #monitor-frame {
+            position: relative;
+            width: 400px;
+            height: 500px;
+            border: 3px solid var(--glow);
+            box-shadow: 0 0 var(--glow-blur) var(--glow), inset 0 0 10px var(--glow);
+            background: #000;
+            overflow: hidden;
+            transition: box-shadow 0.05s ease-out;
+        }
+
+        #console-hud {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(0, 40, 0, 0.9);
+            border-bottom: 1px solid var(--glow);
+            padding: 8px; font-size: 10px; z-index: 10;
+            display: flex; justify-content: space-between;
+        }
+
+        canvas { display: block; width: 400px; height: 500px; }
+
+        #audio-interface {
+            position: absolute; bottom: 10px; width: 100%;
+            padding: 0 10px; display: flex; gap: 5px; z-index: 20;
+        }
+
+        .btn-ui {
+            background: var(--glow); color: #000; border: none;
+            font-size: 9px; font-weight: bold; padding: 5px; cursor: pointer; flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div id="monitor-frame">
+    <div id="console-hud">
+        <div>SYS: 018810<br>DATA: <span id="count">0</span></div>
+        <div style="text-align: right;">
+            <button class="btn-ui" onclick="location.reload()">RESET</button>
+        </div>
+    </div>
+    
+    <canvas id="c"></canvas>
+
+    <div id="audio-interface">
+        <input type="file" id="mp3-input" accept="audio/*" style="display:none;">
+        <button class="btn-ui" onclick="document.getElementById('mp3-input').click()">LOAD 3pm.mp3</button>
+        <button class="btn-ui" onclick="exportData()">LOG</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const countDisp = document.getElementById('count');
+    const mp3Input = document.getElementById('mp3-input');
+
+    // SYNCED TO MONITOR SIZE
+    canvas.width = 400;
+    canvas.height = 500;
+
+    let dataLog = [];
+    let audioCtx, analyzer, dataArray;
+
+    function runKernel(x, y) {
+        const rect = canvas.getBoundingClientRect();
+        const rx = x - rect.left;
+        const ry = y - rect.top;
+        
+        // SYMMETRIC PARITY LOGIC (Locked to 400x500)
+        const mx = 400 - rx;
+        const my = 500 - ry;
+
+        if (dataLog.length < 20000) {
+            dataLog.push({t: Date.now(), x: rx, y: ry, mx, my});
+            countDisp.innerText = dataLog.length;
+        }
+
+        ctx.fillStyle = "#0f0";
+        ctx.fillRect(rx-2, ry-2, 4, 4);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(mx-2, ry-2, 4, 4);
+    }
+
+    function setupAudio(file) {
+        if (audioCtx) audioCtx.close();
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyzer = audioCtx.createAnalyser();
+        analyzer.fftSize = 256;
+        dataArray = new Uint8Array(analyzer.frequencyBinCount);
+
+        const url = URL.createObjectURL(file);
+        const audio = new Audio(url);
+        const source = audioCtx.createMediaElementSource(audio);
+        source.connect(analyzer);
+        analyzer.connect(audioCtx.destination);
+        
+        audio.play();
+        driveWithAudio();
+
+        audio.onended = () => exportData();
+    }
+
+    function driveWithAudio() {
+        analyzer.getByteFrequencyData(dataArray);
+        let bass = dataArray[2]; 
+        let treble = dataArray[100]; 
+
+        // Pulse the CSS glow variable
+        let glowIntensity = Math.max(15, (bass / 255) * 60);
+        document.documentElement.style.setProperty('--glow-blur', glowIntensity + "px");
+
+        if (bass > 110) {
+            let x = 200 + (bass - 128) * 1.5;
+            let y = 250 + (treble - 128) * 1.5;
+            runKernel(x + canvas.getBoundingClientRect().left, y + canvas.getBoundingClientRect().top);
+        }
+        requestAnimationFrame(driveWithAudio);
+    }
+
+    function exportData() {
+        if (dataLog.length === 0) return;
+        const blob = new Blob([JSON.stringify(dataLog)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'Omnis-Kernel-018810.json'; a.click();
+    }
+
+    canvas.addEventListener('pointermove', (e) => {
+        if (e.buttons > 0) runKernel(e.clientX, e.clientY);
+    });
+
+    mp3Input.addEventListener('change', (e) => {
+        if (e.target.files[0]) setupAudio(e.target.files[0]);
+    });
+
+    function animate() {
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(0,0,400,500);
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
+    }
+</script>
+</body>
+</html>
