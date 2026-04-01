@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Omnis-Kernel-018810-v3';
+const CACHE_NAME = 'Omnis-Kernel-018810-v4';
 
 const ASSETS = [
   './',
