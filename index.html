@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#00ff00">
-    <title>Omnis-Kernel-018810</title>
+    <title>Omnis-Kernel-018810 • GEOMETRIC PARITY LAYER</title>
     <style>
         :root { --glow: #0f0; --bg: #000; }
         * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
@@ -51,22 +51,23 @@
 <body>
 
 <div id="hud">
-    <div id="sys">NODE: <span style="color:#ff0">018810_DEEP</span><br>BUFF: <span id="count">0</span>/5k<br>PARITY: <span id="parity">LOCKED</span></div>
+    <div id="sys">NODE: <span style="color:#ff0">018810_ULTIMA</span><br>BUFF: <span id="count">0</span>/5k<br>PARITY: <span id="parity">GEOMETRIC</span></div>
     <div id="hex_val">[0x8810_F]</div>
     <div id="perf" style="text-align:right;">FPS: <span id="fps">60</span><br>KEYS: <span id="keys">0</span><br>1:1 PARITY</div>
 </div>
 
 <div id="status-overlay">
-    <div>NODE: 018810_DEEP</div>
-    <div>PARITY: DUAL_SYNC</div>
+    <div>NODE: 018810_ULTIMA</div>
+    <div>PARITY: DUAL_SYNC + GEOMETRIC</div>
     <div>BUFFER: ACTIVE</div>
     <div>[GAP: <span id="gap">0.00</span>px]</div>
     <div>LATENCY: <span id="latency">0</span>ms</div>
     <div>LOAD: <span id="load">OPTIMAL</span> (<span id="cpu">\~3%</span>)</div>
     <div>BASS: <span id="bass-val" style="color:#f80">0%</span> | TREBLE: <span id="treble-val" style="color:#0ff">0%</span></div>
-    <div>BPM: <span id="bpm-val" style="color:#f0f">0</span> • MIC: <span id="mic-status" style="color:#0ff">OFF</span></div>
+    <div>BPM: <span id="bpm-val" style="color:#f0f">0</span> • RMS: <span id="rms-val" style="color:#0ff">0</span></div>
+    <div>MIC: <span id="mic-status" style="color:#0ff">OFF</span> • LAYER: <span id="geo-layer">ACTIVE</span></div>
     <div>ID: <span style="color:#ff0">0x8810_F</span></div>
-    <div style="color:#0ff;margin-top:4px">=== COLLISION + BPM/MIC FULL LOG ===</div>
+    <div style="color:#0ff;margin-top:4px">=== GEOMETRIC PARITY LAYER LOADED ===</div>
 </div>
 
 <div id="dlArea">
@@ -89,6 +90,275 @@
 <input type="file" id="mp3-input" accept="audio/*" style="display:none;">
 
 <script>
+/**
+ * OMNIS-KERNEL-018810 
+ * Geometric Parity Data Layer - EXACT DATA FROM USER
+ */
+const KERNEL_DATA = {
+    outer: [  
+ {i:0,x:0.0000,y:25.0000,z:0.0000},{i:1,x:-3.6867,y:24.4949,z:3.3773},  
+  {i:2,x:0.6150,y:23.9899,z:-7.0076},{i:3,x:5.2149,y:23.4848,z:6.8019},
+  {i:4,x:-9.6947,y:22.9798,z:-1.7149},{i:5,x:9.2385,y:22.4747,z:-5.8768},
+  {i:6,x:-3.0972,y:21.9697,z:11.5213},{i:7,x:-5.9073,y:21.4646,z:-11.3742},
+  {i:8,x:12.8001,y:20.9596,z:4.6746},{i:9,x:-13.2865,y:20.4545,z:5.4845},
+  {i:10,x:6.3861,y:19.9495,z:-13.6468},{i:11,x:4.7028,y:19.4444,z:14.9932},
+  {i:12,x:-14.1191,y:18.9394,z:-8.1823},{i:13,x:16.4932,y:18.4343,z:-3.6260},
+  {i:14,x:-10.0201,y:17.9293,z:14.2526},{i:15,x:-2.3039,y:17.4242,z:-17.7789},
+  {i:16,x:14.0733,y:16.9192,z:11.8610},{i:17,x:-18.8406,y:16.4141,z:0.7791},
+  {i:18,x:13.6696,y:15.9091,z:-13.6031},{i:19,x:-0.9095,y:15.4040,z:19.6695},
+  {i:20,x:-12.8625,y:14.8990,z:-15.4135},{i:21,x:20.2580,y:14.3939,z:2.7257},
+  {i:22,x:-17.0632,y:13.8889,z:11.8721},{i:23,x:4.6345,y:13.3838,z:-20.6008},
+  {i:24,x:10.6533,y:12.8788,z:18.5915},{i:25,x:-20.6954,y:12.3737,z:-6.6024},
+  {i:26,x:19.9742,y:11.8687,z:-9.2286},{i:27,x:-8.5968,y:11.3636,z:20.5417},
+  {i:28,x:-7.6215,y:10.8586,z:-21.1897},{i:29,x:20.1428,y:10.3535,z:10.5865},
+  {i:30,x:-22.2194,y:9.8485,z:5.8570},{i:31,x:12.5411,y:9.3434,z:-19.5044},
+  {i:32,x:3.9610,y:8.8384,z:23.0476},{i:33,x:-18.6352,y:8.3333,z:-14.4321},
+  {i:34,x:23.6617,y:7.8283,z:-1.9603},{i:35,x:-16.2323,y:7.3232,z:17.5466},
+  {i:36,x:0.1173,y:6.8182,z:-24.0520},{i:37,x:16.2527,y:6.3131,z:17.9163},
+  {i:38,x:-24.2122,y:5.8081,z:-2.2440},{i:39,x:19.4608,y:5.3030,z:-14.7701},
+  {i:40,x:-4.3914,y:4.7980,z:24.1391},{i:41,x:-13.1174,y:4.2929,z:-20.8448},
+  {i:42,x:23.8326,y:3.7879,z:6.5315},{i:43,x:-22.0496,y:3.2828,z:11.3155},
+  {i:44,x:8.6366,y:2.7778,z:-23.2958},{i:45,x:9.3870,y:2.2727,z:23.0590},
+  {i:46,x:-22.5349,y:1.7677,z:-10.6797},{i:47,x:23.8598,y:1.2626,z:-7.3562},
+  {i:48,x:-12.6348,y:0.7576,z:21.5590},{i:49,x:-5.2485,y:0.2525,z:-24.4415},
+  {i:50,x:20.3801,y:-0.2525,z:14.4771},{i:51,x:-24.7967,y:-0.7576,z:3.0904},
+  {i:52,x:16.1836,y:-1.2626,z:-19.0131},{i:53,x:0.9088,y:-1.7677,z:24.9209},
+  {i:54,x:-17.4752,y:-2.2727,z:-17.7328},{i:55,x:24.8128,y:-2.7778,z:1.2687},
+  {i:56,x:-19.1056,y:-3.2828,z:15.7860},{i:57,x:3.4146,y:-3.7879,z:-24.4743},
+  {i:58,x:13.9674,y:-4.2929,z:20.2850},{i:59,x:-23.9105,y:-4.7980,z:-5.5017},
+  {i:60,x:21.2566,y:-5.3030,z:-12.0431},{i:61,x:-7.5034,y:-5.8081,z:23.1293},
+  {i:62,x:-10.0385,y:-6.3131,z:-22.0085},{i:63,x:22.1420,y:-6.8182,z:9.3938},
+  {i:64,x:-22.5319,y:-7.3232,z:7.9803},{i:65,x:11.1483,y:-7.8283,z:-20.9627},
+  {i:66,x:5.8966,y:-8.3333,z:22.8207},{i:67,x:-19.6083,y:-8.8384,z:-12.7436},
+  {i:68,x:22.8722,y:-9.3434,z:-3.8160},{i:69,x:-14.1582,y:-9.8485,z:18.0984},
+  {i:70,x:-1.7681,y:-10.3535,z:-22.6865},{i:71,x:16.4554,y:-10.8586,z:15.3724},
+  {i:72,x:-22.2670,y:-11.3636,z:-0.2173},{i:73,x:16.3686,y:-11.8687,z:-14.7038},
+  {i:74,x:-2.1102,y:-12.3737,z:21.6203},{i:75,x:-12.8708,y:-12.8788,z:-17.1313},
+  {i:76,x:20.7560,y:-13.3838,z:3.8807},{i:77,x:-17.6471,y:-13.8889,z:10.9853},
+  {i:78,x:5.4988,y:-14.3939,z:-19.6870},{i:79,x:9.0786,y:-14.8990,z:17.9053},
+  {i:80,x:-18.4289,y:-15.4040,z:-6.9347},{i:81,x:17.8967,y:-15.9091,z:-7.1839},
+  {i:82,x:-8.1586,y:-16.4141,z:17.0004},{i:83,x:-5.3367,y:-16.9192,z:-17.6142},
+  {i:84,x:15.4226,y:-17.4242,z:9.1399},{i:85,x:-17.0517,y:-17.9293,z:3.5747},
+  {i:86,x:9.8466,y:-18.4343,z:-13.7193},{i:87,x:1.9391,y:-18.9394,z:16.2031},
+  {i:88,x:-11.9159,y:-19.4444,z:-10.2433},{i:89,x:15.0596,y:-19.9495,z:-0.4756},
+  {i:90,x:-10.2871,y:-20.4545,z:10.0392},{i:91,x:0.7622,y:-20.9596,z:-13.6057},
+  {i:92,x:8.1154,y:-21.4646,z:9.9201},{i:93,x:-11.8077,y:-21.9697,z:-1.7062},
+  {i:94,x:9.0484,y:-22.4747,z:-6.1655},{i:95,x:-2.2545,y:-22.9798,z:9.5836},
+  {i:96,x:-4.1886,y:-23.4848,z:-7.4778},{i:97,x:6.6806,y:-23.9899,z:2.2033},
+  {i:98,x:-4.5590,y:-24.4949,z:2.0526},{i:99,x:0.0000,y:-25.0000,z:-0.0000}
+    ],
+    mid: [       
+ {i:0, x:0.0000, y:10.0000, z:0.0000},
+  {i:1, x:-1.4747, y:9.7980, z:1.3509},
+  {i:2, x:0.2460, y:9.5960, z:-2.8030},
+  {i:3, x:2.0860, y:9.3939, z:2.7208},
+  {i:4, x:-3.8779, y:9.1919, z:-0.6859},
+  {i:5, x:3.6954, y:8.9899, z:-2.3507},
+  {i:6, x:-1.2389, y:8.7879, z:4.6085},
+  {i:7, x:-2.3629, y:8.5859, z:-4.5497},
+  {i:8, x:5.1201, y:8.3838, z:1.8698},
+  {i:9, x:-5.3146, y:8.1818, z:2.1938},
+  {i:10, x:2.5545, y:7.9798, z:-5.4587},
+  {i:11, x:1.8811, y:7.7778, z:5.9973},
+  {i:12, x:-5.6476, y:7.5758, z:-3.2729},
+  {i:13, x:6.5973, y:7.3737, z:-1.4504},
+  {i:14, x:-4.0081, y:7.1717, z:5.7010},
+  {i:15, x:-0.9216, y:6.9697, z:-7.1115},
+  {i:16, x:5.6293, y:6.7677, z:4.7444},
+  {i:17, x:-7.5362, y:6.5657, z:0.3116},
+  {i:18, x:5.4678, y:6.3636, z:-5.4412},
+  {i:19, x:-0.3638, y:6.1616, z:7.8678},
+  {i:20, x:-5.1450, y:5.9596, z:-6.1654},
+  {i:21, x:8.1032, y:5.7576, z:1.0903},
+  {i:22, x:-6.8253, y:5.5556, z:4.7488},
+  {i:23, x:1.8538, y:5.3535, z:-8.2403},
+  {i:24, x:4.2613, y:5.1515, z:7.4366},
+  {i:25, x:-8.2782, y:4.9495, z:-2.6410},
+  {i:26, x:7.9897, y:4.7475, z:-3.6914},
+  {i:27, x:-3.4387, y:4.5455, z:8.2167},
+  {i:28, x:-3.0486, y:4.3434, z:-8.4759},
+  {i:29, x:8.0571, y:4.1414, z:4.2346},
+  {i:30, x:-8.8878, y:3.9394, z:2.3428},
+  {i:31, x:5.0165, y:3.7374, z:-7.8017},
+  {i:32, x:1.5844, y:3.5354, z:9.2191},
+  {i:33, x:-7.4541, y:3.3333, z:-5.7728},
+  {i:34, x:9.4647, y:3.1313, z:-0.7841},
+  {i:35, x:-6.4929, y:2.9293, z:7.0186},
+  {i:36, x:0.0469, y:2.7273, z:-9.6208},
+  {i:37, x:6.5011, y:2.5253, z:7.1665},
+  {i:38, x:-9.6849, y:2.3232, z:-0.8976},
+  {i:39, x:7.7843, y:2.1212, z:-5.9080},
+  {i:40, x:-1.7566, y:1.9192, z:9.6556},
+  {i:41, x:-5.2469, y:1.7172, z:-8.3379},
+  {i:42, x:9.5330, y:1.5152, z:2.6126},
+  {i:43, x:-8.8198, y:1.3131, z:4.5262},
+  {i:44, x:3.4546, y:1.1111, z:-9.3183},
+  {i:45, x:3.7548, y:0.9091, z:9.2236},
+  {i:46, x:-9.0139, y:0.7071, z:-4.2719},
+  {i:47, x:9.5439, y:0.5051, z:-2.9425},
+  {i:48, x:-5.0539, y:0.3030, z:8.6236},
+  {i:49, x:-2.0994, y:0.1010, z:-9.7766},
+  {i:50, x:8.1521, y:-0.1010, z:5.7908},
+  {i:51, x:-9.9187, y:-0.3030, z:1.2361},
+  {i:52, x:6.4734, y:-0.5051, z:-7.6052},
+  {i:53, x:0.3635, y:-0.7071, z:9.9683},
+  {i:54, x:-6.9901, y:-0.9091, z:-7.0931},
+  {i:55, x:9.9251, y:-1.1111, z:0.5075},
+  {i:56, x:-7.6422, y:-1.3131, z:6.3144},
+  {i:57, x:1.3658, y:-1.5152, z:-9.7897},
+  {i:58, x:5.5870, y:-1.7172, z:8.1140},
+  {i:59, x:-9.5642, y:-1.9192, z:-2.2007},
+  {i:60, x:8.5026, y:-2.1212, z:-4.8172},
+  {i:61, x:-3.0014, y:-2.3232, z:9.2517},
+  {i:62, x:-4.0154, y:-2.5253, z:-8.8034},
+  {i:63, x:8.8568, y:-2.7273, z:3.7575},
+  {i:64, x:-9.0127, y:-2.9293, z:3.1921},
+  {i:65, x:4.4593, y:-3.1313, z:-8.3851},
+  {i:66, x:2.3586, y:-3.3333, z:9.1283},
+  {i:67, x:-7.8433, y:-3.5354, z:-5.0974},
+  {i:68, x:9.1489, y:-3.7374, z:-1.5264},
+  {i:69, x:-5.6633, y:-3.9394, z:7.2394},
+  {i:70, x:-0.7073, y:-4.1414, z:-9.0746},
+  {i:71, x:6.5822, y:-4.3434, z:6.1490},
+  {i:72, x:-8.9068, y:-4.5455, z:-0.0869},
+  {i:73, x:6.5474, y:-4.7475, z:-5.8815},
+  {i:74, x:-0.8441, y:-4.9495, z:8.6481},
+  {i:75, x:-5.1483, y:-5.1515, z:-6.8525},
+  {i:76, x:8.3024, y:-5.3535, z:1.5523},
+  {i:77, x:-7.0589, y:-5.5556, z:4.3941},
+  {i:78, x:2.1995, y:-5.7576, z:-7.8748},
+  {i:79, x:3.6314, y:-5.9596, z:7.1621},
+  {i:80, x:-7.3716, y:-6.1616, z:-2.7739},
+  {i:81, x:7.1587, y:-6.3636, z:-2.8736},
+  {i:82, x:-3.2634, y:-6.5657, z:6.8002},
+  {i:83, x:-2.1347, y:-6.7677, z:-7.0457},
+  {i:84, x:6.1691, y:-6.9697, z:3.6560},
+  {i:85, x:-6.8207, y:-7.1717, z:1.4299},
+  {i:86, x:3.9386, y:-7.3737, z:-5.4877},
+  {i:87, x:0.7757, y:-7.5758, z:6.4812},
+  {i:88, x:-4.7664, y:-7.7778, z:-4.0973},
+  {i:89, x:6.0238, y:-7.9798, z:-0.1903},
+  {i:90, x:-4.1149, y:-8.1818, z:4.0157},
+  {i:91, x:0.3049, y:-8.3838, z:-5.4423},
+  {i:92, x:3.2462, y:-8.5859, z:3.9681},
+  {i:93, x:-0.9446, y:-8.7879, z:-0.1365},
+  {i:94, x:3.6193, y:-8.9899, z:-2.4662},
+  {i:95, x:-0.1804, y:-9.1919, z:3.8335},
+  {i:96, x:-1.6754, y:-9.3939, z:-2.9911},
+  {i:97, x:2.6722, y:-9.5960, z:0.8813},
+  {i:98, x:-1.8236, y:-9.7980, z:0.8210},
+  {i:99, x:0.0000, y:-10.0000, z:-0.0000}
+    ],
+    inner: [       
+  {i:0,  x: 0.0000, y: 2.0000, z: 0.0000},
+  {i:1,  x:-0.2949, y: 1.9596, z: 0.2702},
+  {i:2,  x: 0.0492, y: 1.9192, z:-0.5606},
+  {i:3,  x: 0.4172, y: 1.8788, z: 0.5442},
+  {i:4,  x:-0.7756, y: 1.8384, z:-0.1372},
+  {i:5,  x: 0.7391, y: 1.7980, z:-0.4701},
+  {i:6,  x:-0.2478, y: 1.7576, z: 0.9217},
+  {i:7,  x:-0.4726, y: 1.7172, z:-0.9100},
+  {i:8,  x: 1.0240, y: 1.6768, z: 0.3740},
+  {i:9,  x:-1.0629, y: 1.6364, z: 0.4388},
+  {i:10, x: 0.5109, y: 1.5960, z:-1.0917},
+  {i:11, x: 0.3762, y: 1.5556, z: 1.1995},
+  {i:12, x:-1.1295, y: 1.5152, z:-0.6546},
+  {i:13, x: 1.3195, y: 1.4747, z:-0.2901},
+  {i:14, x:-0.8016, y: 1.4343, z: 1.1402},
+  {i:15, x:-0.1843, y: 1.3939, z:-1.4223},
+  {i:16, x: 1.1259, y: 1.3535, z: 0.9489},
+  {i:17, x:-1.5072, y: 1.3131, z: 0.0623},
+  {i:18, x: 1.0936, y: 1.2727, z:-1.0882},
+  {i:19, x:-0.0728, y: 1.2323, z: 1.5736},
+  {i:20, x:-1.0290, y: 1.1919, z:-1.2331},
+  {i:21, x: 1.6206, y: 1.1515, z: 0.2181},
+  {i:22, x:-1.3651, y: 1.1111, z: 0.9498},
+  {i:23, x: 0.3708, y: 1.0707, z:-1.6481},
+  {i:24, x: 0.8523, y: 1.0303, z: 1.4873},
+  {i:25, x:-1.6556, y: 0.9899, z:-0.5282},
+  {i:26, x: 1.5979, y: 0.9495, z:-0.7383},
+  {i:27, x:-0.6877, y: 0.9091, z: 1.6433},
+  {i:28, x:-0.6097, y: 0.8687, z:-1.6952},
+  {i:29, x: 1.6114, y: 0.8283, z: 0.8469},
+  {i:30, x:-1.7776, y: 0.7879, z: 0.4686},
+  {i:31, x: 1.0033, y: 0.7475, z:-1.5603},
+  {i:32, x: 0.3169, y: 0.7071, z: 1.8438},
+  {i:33, x:-1.4908, y: 0.6667, z:-1.1546},
+  {i:34, x: 1.8929, y: 0.6263, z:-0.1568},
+  {i:35, x:-1.2986, y: 0.5859, z: 1.4037},
+  {i:36, x: 0.0094, y: 0.5455, z:-1.9242},
+  {i:37, x: 1.3002, y: 0.5051, z: 1.4333},
+  {i:38, x:-1.9370, y: 0.4646, z:-0.1795},
+  {i:39, x: 1.5569, y: 0.4242, z:-1.1816},
+  {i:40, x:-0.3513, y: 0.3838, z: 1.9311},
+  {i:41, x:-1.0494, y: 0.3434, z:-1.6676},
+  {i:42, x: 1.9066, y: 0.3030, z: 0.5225},
+  {i:43, x:-1.7640, y: 0.2626, z: 0.9052},
+  {i:44, x: 0.6909, y: 0.2222, z:-1.8637},
+  {i:45, x: 0.7510, y: 0.1818, z: 1.8447},
+  {i:46, x:-1.8028, y: 0.1414, z:-0.8544},
+  {i:47, x: 1.9088, y: 0.1010, z:-0.5885},
+  {i:48, x:-1.0108, y: 0.0606, z: 1.7247},
+  {i:49, x:-0.4199, y: 0.0202, z:-1.9553},
+  {i:50, x: 1.6304, y:-0.0202, z: 1.1582},
+  {i:51, x:-1.9837, y:-0.0606, z: 0.2472},
+  {i:52, x: 1.2947, y:-0.1010, z:-1.5210},
+  {i:53, x: 0.0727, y:-0.1414, z: 1.9937},
+  {i:54, x:-1.3980, y:-0.1818, z:-1.4186},
+  {i:55, x: 1.9850, y:-0.2222, z: 0.1015},
+  {i:56, x:-1.5284, y:-0.2626, z: 1.2629},
+  {i:57, x: 0.2732, y:-0.3030, z:-1.9579},
+  {i:58, x: 1.1174, y:-0.3434, z: 1.6228},
+  {i:59, x:-1.9128, y:-0.3838, z:-0.4401},
+  {i:60, x: 1.7005, y:-0.4242, z:-0.9634},
+  {i:61, x:-0.6003, y:-0.4646, z: 1.8503},
+  {i:62, x:-0.8031, y:-0.5051, z:-1.7607},
+  {i:63, x: 1.7714, y:-0.5455, z: 0.7515},
+  {i:64, x:-1.8025, y:-0.5859, z: 0.6384},
+  {i:65, x: 0.8919, y:-0.6263, z:-1.6770},
+  {i:66, x: 0.4717, y:-0.6667, z: 1.8257},
+  {i:67, x:-1.5687, y:-0.7071, z:-1.0195},
+  {i:68, x: 1.8298, y:-0.7475, z:-0.3053},
+  {i:69, x:-1.1327, y:-0.7879, z: 1.4479},
+  {i:70, x:-0.1415, y:-0.8283, z:-1.8149},
+  {i:71, x: 1.3164, y:-0.8687, z: 1.2298},
+  {i:72, x:-1.7814, y:-0.9091, z:-0.0174},
+  {i:73, x: 1.3095, y:-0.9495, z:-1.1763},
+  {i:74, x:-0.1688, y:-0.9899, z: 1.7296},
+  {i:75, x:-1.0297, y:-1.0303, z:-1.3705},
+  {i:76, x: 1.6605, y:-1.0707, z: 0.3105},
+  {i:77, x:-1.4118, y:-1.1111, z: 0.8788},
+  {i:78, x: 0.4399, y:-1.1515, z:-1.5750},
+  {i:79, x: 0.7263, y:-1.1919, z: 1.4324},
+  {i:80, x:-1.4743, y:-1.2323, z:-0.5548},
+  {i:81, x: 1.4317, y:-1.2727, z:-0.5747},
+  {i:82, x:-0.6527, y:-1.3131, z: 1.3600},
+  {i:83, x:-0.4269, y:-1.3535, z:-1.4091},
+  {i:84, x: 1.2338, y:-1.3939, z: 0.7312},
+  {i:85, x:-1.3641, y:-1.4343, z: 0.2859},
+  {i:86, x: 0.7877, y:-1.4747, z:-1.0975},
+  {i:87, x: 0.1551, y:-1.5152, z: 1.2962},
+  {i:88, x:-0.9533, y:-1.5556, z:-0.8195},
+  {i:89, x: 1.2048, y:-1.5960, z:-0.0381},
+  {i:90, x:-0.8230, y:-1.6364, z: 0.8031},
+  {i:91, x: 0.0610, y:-1.6768, z:-1.0885},
+  {i:92, x: 0.6492, y:-1.7172, z: 0.7936},
+  {i:93, x:-0.9446, y:-1.7576, z:-0.1365},
+  {i:94, x: 0.7239, y:-1.7980, z:-0.4932},
+  {i:95, x:-0.1804, y:-1.8384, z: 0.7667},
+  {i:96, x:-0.3351, y:-1.8788, z:-0.5982},
+  {i:97, x: 0.5344, y:-1.9192, z: 0.1763},
+  {i:98, x:-0.3647, y:-1.9596, z: 0.1642},
+  {i:99, x: 0.0000, y:-2.0000, z:-0.0000}
+    ],
+    config: {
+        version: "018810_ULTIMA",
+        parity: 300,
+        scale: 8.5,
+        rotationSpeedBase: 0.0008
+    }
+};
+
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d', { alpha: true });
 const hexVal = document.getElementById('hex_val');
@@ -104,6 +374,7 @@ const parityEl = document.getElementById('parity');
 const bassValEl = document.getElementById('bass-val');
 const trebleValEl = document.getElementById('treble-val');
 const bpmValEl = document.getElementById('bpm-val');
+const rmsValEl = document.getElementById('rms-val');
 const micStatusEl = document.getElementById('mic-status');
 
 let w = canvas.width = window.innerWidth;
@@ -118,18 +389,21 @@ let keysGenerated = 0;
 let particleCounter = 0;
 let audioCtx = null;
 let analyzer = null;
-let dataArray = null;
+let freqData = null;
+let timeData = null;
 let audioEl = null;
 let micStream = null;
 let isMicActive = false;
 let currentMode = 0;
-const modes = ["SYMMETRY", "APEX", "NEURAL", "FORTRESS", "DEEP", "COLLISION"];
+const modes = ["SYMMETRY", "APEX", "NEURAL", "FORTRESS", "DEEP", "COLLISION", "GEOMETRIC"];
 let lastTime = performance.now();
 let lastX = 0, lastY = 0;
 let painting = false;
 let currentBPM = 0;
 let beatTimes = [];
 let lastBeatTime = 0;
+let rmsHistory = [];
+let rotationAngle = 0;   // for geometric layer rotation (audio-driven)
 
 function resize() {
     w = canvas.width = window.innerWidth;
@@ -168,11 +442,11 @@ function spawnParticle(x, y, vx, vy, source = "BPM") {
         vx: vx || (Math.random() * 8 - 4),
         vy: vy || (Math.random() * 8 - 4),
         size: 9 + Math.random() * 7,
-        life: 1400
+        life: 1400,
+        hueShift: 0
     };
     particles.push(p);
 
-    // FULL LOGGED SPAWN (BPM or touch driven)
     if (dataLog.length < 5000) {
         dataLog.push({
             t: Date.now(),
@@ -185,7 +459,8 @@ function spawnParticle(x, y, vx, vy, source = "BPM") {
             mode: modes[currentMode],
             bpm: currentBPM,
             bass: parseFloat(bassValEl.textContent) || 0,
-            treble: parseFloat(trebleValEl.textContent) || 0
+            treble: parseFloat(trebleValEl.textContent) || 0,
+            rms: parseFloat(rmsValEl.textContent) || 0
         });
         countDisp.textContent = dataLog.length;
     }
@@ -198,7 +473,7 @@ function launchSeedBurst() {
         const y = Math.random() * h;
         spawnParticle(x, y, (centerX - x) * 0.08, (Math.random() - 0.5) * 6, "BURST");
     }
-    pushTelem("SEED BURST LAUNCHED • COLLISION ENGINE");
+    pushTelem("SEED BURST LAUNCHED • GEOMETRIC PARITY");
 }
 
 function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
@@ -228,7 +503,6 @@ function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
     ctx.lineTo(mx, y);
     ctx.stroke();
 
-    // Center cross detection (horizontal OR vertical = key pulse)
     const crossedH = (lastX < centerX && x >= centerX) || (lastX > centerX && x <= centerX);
     const crossedV = (lastY < centerY && y >= centerY) || (lastY > centerY && y <= centerY);
     if (crossedH || crossedV) {
@@ -239,35 +513,7 @@ function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
         setTimeout(() => parityEl.textContent = "LOCKED", 420);
     }
 
-    if (modes[currentMode] === "APEX") {
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.beginPath(); 
-        ctx.rect(Math.min(x, mx), Math.min(y, my), Math.abs(x - mx), Math.abs(y - my));
-        ctx.stroke();
-    } 
-    else if (modes[currentMode] === "FORTRESS") {
-        ctx.strokeStyle = "rgba(255,255,255,0.4)";
-        ctx.setLineDash([3, 6]);
-        ctx.strokeRect(Math.min(x, mx), Math.min(y, my), Math.abs(x - mx), Math.abs(y - my));
-        ctx.setLineDash([]);
-    } 
-    else if (modes[currentMode] === "NEURAL") {
-        ctx.strokeStyle = "rgba(0,255,180,0.6)";
-        ctx.beginPath();
-        ctx.moveTo(x, y); ctx.lineTo(x + dx * 14, y + dy * 14);
-        ctx.moveTo(mx, y); ctx.lineTo(mx - dx * 14, y + dy * 14);
-        ctx.stroke();
-    } 
-    else if (modes[currentMode] === "DEEP") {
-        ctx.fillStyle = "rgba(0,255,80,0.3)";
-        ctx.fillRect(x - 12, y - 12, 24, 24);
-        ctx.fillRect(mx - 12, my - 12, 24, 24);
-        ctx.strokeStyle = "#0ff";
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(mx, my); ctx.stroke();
-    }
-
-    if (modes[currentMode] === "COLLISION") {
+    if (modes[currentMode] === "COLLISION" || modes[currentMode] === "GEOMETRIC") {
         spawnParticle(x, y, (centerX - x) * 0.12 + (Math.random() * 3 - 1.5), dy * 0.8, "TOUCH");
     }
 
@@ -285,24 +531,20 @@ function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
 }
 
 function setupAudio(file) {
-    if (isMicActive) {
-        if (micStream) micStream.getTracks().forEach(t => t.stop());
-        micStream = null;
-        isMicActive = false;
-        micBtn.textContent = "MIC ON";
-        micStatusEl.textContent = "OFF";
-    }
+    if (isMicActive) { if (micStream) micStream.getTracks().forEach(t => t.stop()); micStream = null; isMicActive = false; micStatusEl.textContent = "OFF"; }
     const url = URL.createObjectURL(file);
     audioEl = new Audio(url);
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyzer = audioCtx.createAnalyser();
-    analyzer.fftSize = 256;
-    dataArray = new Uint8Array(analyzer.frequencyBinCount);
+    analyzer.fftSize = 512;
+    analyzer.smoothingTimeConstant = 0.75;
+    freqData = new Uint8Array(analyzer.frequencyBinCount);
+    timeData = new Uint8Array(analyzer.frequencyBinCount);
     const source = audioCtx.createMediaElementSource(audioEl);
     source.connect(analyzer);
     analyzer.connect(audioCtx.destination);
     audioEl.play().catch(() => {});
-    pushTelem("FILE AUDIO SYNC • BPM DETECTION ACTIVE");
+    pushTelem("FILE + GEOMETRIC PARITY SYNC");
     driveAudio();
 }
 
@@ -310,89 +552,120 @@ async function toggleMic() {
     const micBtn = document.getElementById('mic-btn');
     if (isMicActive) {
         if (micStream) micStream.getTracks().forEach(t => t.stop());
-        micStream = null;
-        isMicActive = false;
-        micBtn.textContent = "MIC ON";
-        micStatusEl.textContent = "OFF";
-        pushTelem("MIC INPUT STOPPED");
+        micStream = null; isMicActive = false; micBtn.textContent = "MIC ON"; micStatusEl.textContent = "OFF";
+        pushTelem("MIC STOPPED");
         return;
     }
-
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        micStream = await navigator.mediaDevices.getUserMedia({ 
-            audio: { 
-                echoCancellation: false, 
-                noiseSuppression: false,
-                autoGainControl: false 
-            } 
-        });
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
         const source = audioCtx.createMediaStreamSource(micStream);
         if (!analyzer) {
             analyzer = audioCtx.createAnalyser();
-            analyzer.fftSize = 256;
-            dataArray = new Uint8Array(analyzer.frequencyBinCount);
+            analyzer.fftSize = 512; analyzer.smoothingTimeConstant = 0.75;
+            freqData = new Uint8Array(analyzer.frequencyBinCount);
+            timeData = new Uint8Array(analyzer.frequencyBinCount);
         }
         source.connect(analyzer);
-        // NO destination connect → no feedback
-        isMicActive = true;
-        micBtn.textContent = "MIC OFF";
-        micStatusEl.textContent = "LIVE";
-        pushTelem("MIC LIVE • REAL-TIME BPM + PARTICLE DRIVE");
+        isMicActive = true; micBtn.textContent = "MIC OFF"; micStatusEl.textContent = "LIVE";
+        pushTelem("MIC LIVE • GEOMETRIC PARITY ACTIVE");
         driveAudio();
-    } catch (err) {
-        pushTelem("MIC PERMISSION DENIED");
-        console.error(err);
-    }
+    } catch (err) { pushTelem("MIC DENIED"); }
 }
 
 function driveAudio() {
     if (!analyzer) return;
-    analyzer.getByteFrequencyData(dataArray);
+    analyzer.getByteFrequencyData(freqData);
+    analyzer.getByteTimeDomainData(timeData);
 
-    // BASS → X / horizontal velocity
-    let bassSum = 0;
-    for (let i = 0; i < 8; i++) bassSum += dataArray[i];
+    let bassSum = 0, trebleSum = 0;
+    for (let i = 0; i < 8; i++) bassSum += freqData[i];
+    for (let i = 100; i < freqData.length; i++) trebleSum += freqData[i];
     const bassLevel = Math.min(100, Math.floor((bassSum / 8) / 2.55));
-
-    // TREBLE → Y / vertical velocity
-    let trebleSum = 0;
-    for (let i = 100; i < 128; i++) trebleSum += dataArray[i];
-    const trebleLevel = Math.min(100, Math.floor((trebleSum / 28) / 2.55));
+    const trebleLevel = Math.min(100, Math.floor((trebleSum / (freqData.length - 100)) / 2.55));
 
     bassValEl.textContent = `${bassLevel}%`;
     trebleValEl.textContent = `${trebleLevel}%`;
 
-    // BPM BEAT DETECTION (low-frequency energy peaks)
-    const nowTime = Date.now();
-    if (bassLevel > 42 && (nowTime - lastBeatTime) > 250) {
-        beatTimes.push(nowTime);
-        if (beatTimes.length > 10) beatTimes.shift();
-        lastBeatTime = nowTime;
+    let sumSq = 0;
+    for (let i = 0; i < timeData.length; i++) {
+        const val = (timeData[i] - 128) / 128;
+        sumSq += val * val;
+    }
+    const rms = Math.sqrt(sumSq / timeData.length) * 100;
+    rmsHistory.push(rms);
+    if (rmsHistory.length > 8) rmsHistory.shift();
+    rmsValEl.textContent = (rmsHistory.reduce((a, b) => a + b, 0) / rmsHistory.length).toFixed(0);
 
-        if (beatTimes.length > 3) {
+    const nowTime = Date.now();
+    if (bassLevel > 45 && (nowTime - lastBeatTime) > 220) {
+        beatTimes.push(nowTime);
+        if (beatTimes.length > 12) beatTimes.shift();
+        lastBeatTime = nowTime;
+        if (beatTimes.length > 4) {
             let sumIntervals = 0;
-            for (let i = 1; i < beatTimes.length; i++) {
-                sumIntervals += beatTimes[i] - beatTimes[i - 1];
-            }
+            for (let i = 1; i < beatTimes.length; i++) sumIntervals += beatTimes[i] - beatTimes[i - 1];
             const avgMs = sumIntervals / (beatTimes.length - 1);
             currentBPM = Math.round(60000 / avgMs);
         }
         bpmValEl.textContent = currentBPM;
 
-        // BPM-DRIVEN PARTICLE SPAWN (both bass + treble linked)
-        const ax = centerX * 0.25 + (bassLevel / 100) * centerX * 0.7;
-        const ay = h * 0.25 + (trebleLevel / 100) * h * 0.5;
-        spawnParticle(ax, ay,
-            (bassLevel - 50) * 0.24,
-            (trebleLevel - 50) * 0.18,
-            "BPM"
-        );
-
-        if (Math.random() > 0.7) pushTelem(`BPM BEAT \( {currentBPM} • BASS_X: \){bassLevel} TREBLE_Y:${trebleLevel}`);
+        const ax = centerX * 0.2 + (bassLevel / 100) * centerX * 0.75;
+        const ay = h * 0.2 + (trebleLevel / 100) * h * 0.6;
+        const p = spawnParticle(ax, ay, (bassLevel - 50) * 0.28, (trebleLevel - 50) * 0.22, "BPM");
+        p.hueShift = 200;
     }
 
+    // Audio drives geometric rotation
+    rotationAngle += KERNEL_DATA.config.rotationSpeedBase * (1 + bassLevel / 30);
+
     requestAnimationFrame(driveAudio);
+}
+
+function projectPoint(p, scale, rot) {
+    // Simple rotation around Y-axis + orthographic projection
+    const cos = Math.cos(rot);
+    const sin = Math.sin(rot);
+    const rx = p.x * cos - p.z * sin;
+    const rz = p.x * sin + p.z * cos;
+    return {
+        sx: centerX + rx * scale,
+        sy: centerY + p.y * scale * 0.8,   // y is vertical axis
+        depth: rz
+    };
+}
+
+function renderGeometricLayer() {
+    const scale = KERNEL_DATA.config.scale * (1 + (parseFloat(bassValEl.textContent) || 0) / 200);
+    const layers = ['outer', 'mid', 'inner'];
+    const colors = ['#0ff', '#0f0', '#ff0'];
+
+    ctx.shadowBlur = 6;
+    for (let l = 0; l < 3; l++) {
+        const layer = KERNEL_DATA[layers[l]];
+        ctx.strokeStyle = colors[l];
+        ctx.lineWidth = 1.2 + (l * 0.4);
+
+        // Master layer (left side projection)
+        ctx.beginPath();
+        for (let i = 0; i < layer.length; i++) {
+            const proj = projectPoint(layer[i], scale, rotationAngle);
+            if (i === 0) ctx.moveTo(proj.sx, proj.sy);
+            else ctx.lineTo(proj.sx, proj.sy);
+        }
+        ctx.stroke();
+
+        // Mirror layer (right side - perfect parity)
+        ctx.beginPath();
+        for (let i = 0; i < layer.length; i++) {
+            const proj = projectPoint(layer[i], scale, rotationAngle);
+            const mx = w - proj.sx;
+            if (i === 0) ctx.moveTo(mx, proj.sy);
+            else ctx.lineTo(mx, proj.sy);
+        }
+        ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
 }
 
 function prepareJSON() {
@@ -401,7 +674,7 @@ function prepareJSON() {
     link.href = URL.createObjectURL(blob);
     link.download = `DBM_LOG_018810_${Date.now()}.json`;
     document.getElementById('dlArea').style.display = 'block';
-    pushTelem("FULL LOG EXPORTED • PATHS + FPS + BPM + TOUCHES RECORDED");
+    pushTelem("GEOMETRIC PARITY LOG EXPORTED");
 }
 
 function clearCanvas() {
@@ -412,12 +685,15 @@ function clearCanvas() {
     particles = [];
     keysGenerated = 0;
     particleCounter = 0;
+    rotationAngle = 0;
+    rmsHistory = [];
     keysDisp.textContent = "0";
     countDisp.textContent = "0";
     bassValEl.textContent = "0%";
     trebleValEl.textContent = "0%";
     bpmValEl.textContent = "0";
-    pushTelem("CANVAS RESET • ALL LOGS + PATHS CLEARED");
+    rmsValEl.textContent = "0";
+    pushTelem("GEOMETRIC LAYER RESET");
     drawParityLines();
 }
 
@@ -425,16 +701,8 @@ function drawParityLines() {
     ctx.strokeStyle = "#0a0";
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 12]);
-    // Vertical center
-    ctx.beginPath();
-    ctx.moveTo(centerX, 0);
-    ctx.lineTo(centerX, h);
-    ctx.stroke();
-    // Horizontal center (creates all four quadrants)
-    ctx.beginPath();
-    ctx.moveTo(0, centerY);
-    ctx.lineTo(w, centerY);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(w, centerY); ctx.stroke();
     ctx.setLineDash([]);
 }
 
@@ -444,9 +712,29 @@ function loop() {
     ctx.fillRect(0, 0, w, h);
 
     drawParityLines();
+    renderGeometricLayer();   // <-- NEW GEOMETRIC PARITY LAYER
 
-    if (modes[currentMode] === "COLLISION") {
-        if (frames % 18 === 0 && particles.length < 28) {
+    // frequency bars (kept from previous audio viz)
+    if (freqData && freqData.length) {
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "#0ff";
+        const barCount = 24;
+        const barW = w / (barCount * 2);
+        for (let i = 0; i < barCount; i++) {
+            const idx = Math.floor(i * freqData.length / barCount);
+            const val = freqData[idx] / 255;
+            const barH = val * (h * 0.12);
+            ctx.fillStyle = `hsl(${120 + i * 6}, 90%, 70%)`;
+            ctx.fillRect(i * barW, 0, barW - 2, barH);
+            ctx.fillRect(w - (i * barW + barW), 0, barW - 2, barH);
+            ctx.fillRect(i * barW, h - barH, barW - 2, barH);
+            ctx.fillRect(w - (i * barW + barW), h - barH, barW - 2, barH);
+        }
+        ctx.shadowBlur = 0;
+    }
+
+    if (modes[currentMode] === "COLLISION" || modes[currentMode] === "GEOMETRIC") {
+        if (frames % 18 === 0 && particles.length < 32) {
             spawnParticle(Math.random() * centerX, Math.random() * h, (centerX - Math.random() * centerX) * 0.09, (Math.random() - 0.5) * 7, "AUTO");
         }
     }
@@ -456,15 +744,12 @@ function loop() {
         p.life--;
         if (p.life <= 0) { particles.splice(i, 1); continue; }
 
-        const prevX = p.x;
-        const prevY = p.y;
-        p.x += p.vx;
-        p.y += p.vy;
+        const prevX = p.x; const prevY = p.y;
+        p.x += p.vx; p.y += p.vy;
 
         if (p.x < 0 || p.x > w) p.vx = -p.vx * 0.92;
         if (p.y < 0 || p.y > h) p.vy = -p.vy * 0.92;
 
-        // Collision on EITHER axis (horizontal or vertical center)
         const crossedH = (prevX < centerX && p.x >= centerX) || (prevX > centerX && p.x <= centerX);
         const crossedV = (prevY < centerY && p.y >= centerY) || (prevY > centerY && p.y <= centerY);
         if (crossedH || crossedV) {
@@ -472,61 +757,26 @@ function loop() {
             if (crossedV) p.vy = -p.vy * 1.05;
             keysGenerated++;
             keysDisp.textContent = keysGenerated;
-            pushTelem(`PARITY COLLISION #${keysGenerated} @ ${currentBPM}BPM`);
+            pushTelem(`PARITY COLLISION #${keysGenerated}`);
             parityEl.textContent = "PULSE";
             setTimeout(() => parityEl.textContent = "LOCKED", 280);
-
-            ctx.fillStyle = "rgba(255,240,0,0.7)";
-            ctx.fillRect(centerX - 8, p.y - 24, 16, 48);
-            ctx.shadowBlur = 25;
-            ctx.shadowColor = "#ff0";
-            ctx.fillRect(centerX - 8, p.y - 24, 16, 48);
-            ctx.shadowBlur = 0;
-
-            // LOG COLLISION + PATH SNAPSHOT
-            if (dataLog.length < 5000) {
-                dataLog.push({
-                    t: Date.now(),
-                    type: "COLLISION",
-                    id: p.id,
-                    x: Math.floor(p.x),
-                    y: Math.floor(p.y),
-                    bpm: currentBPM
-                });
-                countDisp.textContent = dataLog.length;
-            }
         }
 
-        // MASTER + 3 MIRRORS = ALL FOUR QUADRANTS (visual symmetry)
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = "#ff0";
-        ctx.fillStyle = "#ff0";
-
-        // Top-left / master
-        ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
-        // Top-right (horizontal mirror)
-        ctx.fillRect((w - p.x) - p.size/2, p.y - p.size/2, p.size, p.size);
-        // Bottom-left (vertical mirror)
-        ctx.fillRect(p.x - p.size/2, (h - p.y) - p.size/2, p.size, p.size);
-        // Bottom-right (full mirror)
-        ctx.fillRect((w - p.x) - p.size/2, (h - p.y) - p.size/2, p.size, p.size);
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = `hsl(${p.hueShift || 120}, 100%, 70%)`;
+        ctx.fillStyle = `hsl(${p.hueShift || 120}, 100%, 70%)`;
+        const sz = p.size;
+        ctx.fillRect(p.x - sz/2, p.y - sz/2, sz, sz);
+        ctx.fillRect(w - p.x - sz/2, p.y - sz/2, sz, sz);
+        ctx.fillRect(p.x - sz/2, h - p.y - sz/2, sz, sz);
+        ctx.fillRect(w - p.x - sz/2, h - p.y - sz/2, sz, sz);
     }
 
-    // Periodic STATUS log (FPS + particle count + path tracking summary)
     if (frames % 60 === 0 && dataLog.length < 4900) {
-        dataLog.push({
-            t: Date.now(),
-            type: "STATUS",
-            fps: parseInt(fpsDisp.textContent),
-            particles: particles.length,
-            keys: keysGenerated,
-            bpm: currentBPM,
-            mode: modes[currentMode]
-        });
+        dataLog.push({ t: Date.now(), type: "STATUS", fps: parseInt(fpsDisp.textContent), particles: particles.length, keys: keysGenerated, bpm: currentBPM, rms: parseFloat(rmsValEl.textContent), geoRotation: rotationAngle.toFixed(3) });
         countDisp.textContent = dataLog.length;
     }
 
-    // Waveform
     ctx.strokeStyle = "#0f0";
     ctx.lineWidth = 2;
     ctx.shadowBlur = 0;
@@ -540,39 +790,23 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// Input handlers
-canvas.addEventListener('pointerdown', (e) => {
-    painting = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    runKernel(e.clientX, e.clientY, 0, 0);
-});
-
-canvas.addEventListener('pointermove', (e) => {
-    if (painting) runKernel(e.clientX, e.clientY, e.movementX, e.movementY);
-});
-
+// Input + mode + audio handlers (same as previous)
+canvas.addEventListener('pointerdown', (e) => { painting = true; lastX = e.clientX; lastY = e.clientY; runKernel(e.clientX, e.clientY, 0, 0); });
+canvas.addEventListener('pointermove', (e) => { if (painting) runKernel(e.clientX, e.clientY, e.movementX, e.movementY); });
 canvas.addEventListener('pointerup', () => { painting = false; });
 canvas.addEventListener('pointerleave', () => { painting = false; });
 
 modeBtn.onclick = () => {
     currentMode = (currentMode + 1) % modes.length;
-    pushTelem(`MODE → ${modes[currentMode]} ${modes[currentMode]==="COLLISION"?"(BPM+MIC FULL DRIVE)":""}`);
+    pushTelem(`MODE → ${modes[currentMode]}`);
 };
 
-const mp3Input = document.getElementById('mp3-input');
-mp3Input.addEventListener('change', (e) => {
-    if (e.target.files[0]) setupAudio(e.target.files[0]);
-});
-
+document.getElementById('mp3-input').addEventListener('change', (e) => { if (e.target.files[0]) setupAudio(e.target.files[0]); });
 document.getElementById('mic-btn').onclick = toggleMic;
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'c' || e.key === 'C') clearCanvas();
-    if (e.key === 'm' || e.key === 'M') {
-        currentMode = (currentMode + 1) % modes.length;
-        pushTelem(`MODE → ${modes[currentMode]}`);
-    }
+    if (e.key === 'm' || e.key === 'M') { currentMode = (currentMode + 1) % modes.length; pushTelem(`MODE → ${modes[currentMode]}`); }
     if (e.key === 's' || e.key === 'S') launchSeedBurst();
 });
 
@@ -582,12 +816,11 @@ function boot() {
     clearCanvas();
     ctx.fillStyle = "#0f0";
     ctx.fillRect(centerX - 8, centerY - 8, 16, 16);
-    pushTelem("018810_SYMMETRY_OS BOOTED");
-    pushTelem("COLLISION ENGINE + BPM/MIC + 4-QUADRANT LOGGING");
-    pushTelem("Mic + File both drive BPM → particle spawns");
-    pushTelem("Every spawn, collision, touch & FPS status logged");
-    pushTelem("Particles mirrored in ALL FOUR quadrants");
-    console.log('%cOmnis-Kernel-018810 COLLISION + BPM/MIC initialized • Particle paths + FPS + BPM + touches fully recorded • 4-quadrant symmetry active', 'color:#0f0; font-family:monospace; font-size:12px');
+    pushTelem("018810_ULTIMA BOOTED");
+    pushTelem("GEOMETRIC PARITY LAYER LOADED (300 nodes)");
+    pushTelem("Outer / Mid / Inner helices mirrored perfectly");
+    pushTelem("Audio drives rotation + particle interaction");
+    console.log('%cOmnis-Kernel-018810_ULTIMA + GEOMETRIC PARITY LAYER initialized • 300-node helix data rendered with full left/right parity mirror • Audio-driven rotation + collision logging', 'color:#0f0; font-family:monospace; font-size:12px');
 }
 
 boot();
