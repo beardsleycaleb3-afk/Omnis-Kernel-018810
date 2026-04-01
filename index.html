@@ -532,7 +532,35 @@ function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
     lastY = y;
 }
 
-function setupAudio(file) {
+function setupAudio(file) {async function setupAudio(file) {
+    try {
+        if (!audioCtx || audioCtx.state !== "running") {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            await audioCtx.resume();
+        }
+        
+        if (audioEl) audioEl.pause();
+        const url = URL.createObjectURL(file);
+        audioEl = new Audio(url);
+        audioEl.loop = false;
+        
+        analyzer = audioCtx.createAnalyser();
+        analyzer.fftSize = 512;
+        analyzer.smoothingTimeConstant = 0.75;
+        freqData = new Uint8Array(analyzer.frequencyBinCount);
+        timeData = new Uint8Array(analyzer.frequencyBinCount);
+        
+        const source = audioCtx.createMediaElementSource(audioEl);
+        source.connect(analyzer);
+        analyzer.connect(audioCtx.destination);
+        
+        audioEl.play();
+        pushTelem("🎵 FILE LOADED + GEOMETRIC SYNC");
+        driveAudio();
+    } catch(e) {
+        pushTelem("AUDIO BLOCKED");
+    }
+}
     if (isMicActive) { if (micStream) micStream.getTracks().forEach(t => t.stop()); micStream = null; isMicActive = false; micStatusEl.textContent = "OFF"; }
     const url = URL.createObjectURL(file);
     audioEl = new Audio(url);
