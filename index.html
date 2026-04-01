@@ -531,8 +531,7 @@ function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
     lastX = x;
     lastY = y;
 }
-
-function setupAudio(file) {async function setupAudio(file) {
+    async function setupAudio(file) {
     try {
         if (!audioCtx || audioCtx.state !== "running") {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -542,7 +541,6 @@ function setupAudio(file) {async function setupAudio(file) {
         if (audioEl) audioEl.pause();
         const url = URL.createObjectURL(file);
         audioEl = new Audio(url);
-        audioEl.loop = false;
         
         analyzer = audioCtx.createAnalyser();
         analyzer.fftSize = 512;
@@ -556,9 +554,12 @@ function setupAudio(file) {async function setupAudio(file) {
         
         audioEl.play();
         pushTelem("🎵 FILE LOADED + GEOMETRIC SYNC");
-        driveAudio();
+        // driveAudio is already called in your boot/loop or inside toggleMic
     } catch(e) {
-        pushTelem("AUDIO BLOCKED");
+        pushTelem("AUDIO BLOCKED: " + e.message);
+    }
+}
+);
     }
 }
     if (isMicActive) { if (micStream) micStream.getTracks().forEach(t => t.stop()); micStream = null; isMicActive = false; micStatusEl.textContent = "OFF"; }
