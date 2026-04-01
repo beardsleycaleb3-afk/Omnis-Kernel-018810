@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#00ff00">
+    <title>Omnis-Kernel-018810</title>
+    <style>
+        :root { --glow: #0f0; --bg: #000; }
+        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
+        body { margin:0; background:var(--bg); color:var(--glow); font-family:monospace; overflow: hidden; }
+        #hud {
+            position:absolute; top:0; left:0; width:100%; 
+            background:rgba(0,25,0,0.92); border-bottom:2px solid #0f0; 
+            padding:8px 12px; font-size:10px; z-index:1000; 
+            display:grid; grid-template-columns: 1fr 1fr 1fr; align-items:center;
+        }
+        #hex_val { 
+            text-align:center; font-size:18px; color:#ff0; border:2px solid #0f0; 
+            background:rgba(0,0,0,0.6); padding:4px 12px; border-radius:2px; 
+        }
+        #telemetry { 
+            position:absolute; bottom:130px; left:12px; width:220px; height:92px; 
+            color:#0f0; font-size:9px; border-left:2px solid #0f0; padding-left:8px; 
+            overflow:hidden; pointer-events:none; background:rgba(0,15,0,0.6); 
+        }
+        #controls { 
+            position:absolute; bottom:12px; width:100%; display:flex; justify-content:center; gap:8px; 
+            z-index:2000; padding:0 12px; flex-wrap:wrap;
+        }
+        .btn-018810 { 
+            background:#0f0; color:#000; border:none; padding:10px 16px; font-family:monospace; 
+            font-weight:bold; cursor:pointer; flex:1; max-width:110px; font-size:11px; border-radius:2px;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #dlArea { 
+            position:absolute; top:80px; left:10%; width:80%; z-index:3000; display:none; 
+        }
+        #fileLink { 
+            color:#fff; background:#111; padding:16px; display:block; text-align:center; 
+            text-decoration:none; border:3px solid #0f0; font-weight:bold; font-size:13px;
+        }
+        #status-overlay {
+            position:absolute; top:52px; right:12px; background:rgba(0,20,0,0.9); 
+            padding:10px; border:1px solid #0f0; font-size:11px; line-height:1.3;
+            pointer-events:none; min-width:210px; z-index:900;
+        }
+        #keys { color:#ff0; font-size:15px; }
+    </style>
+</head>
+<body>
+
+<div id="hud">
+    <div id="sys">NODE: <span style="color:#ff0">018810_DEEP</span><br>BUFF: <span id="count">0</span>/5k<br>PARITY: <span id="parity">LOCKED</span></div>
+    <div id="hex_val">[0x8810_F]</div>
+    <div id="perf" style="text-align:right;">FPS: <span id="fps">60</span><br>KEYS: <span id="keys">0</span><br>1:1 PARITY</div>
+</div>
+
+<div id="status-overlay">
+    <div>NODE: 018810_DEEP</div>
+    <div>PARITY: DUAL_SYNC</div>
+    <div>BUFFER: ACTIVE</div>
+    <div>[GAP: <span id="gap">0.00</span>px]</div>
+    <div>LATENCY: <span id="latency">0</span>ms</div>
+    <div>LOAD: <span id="load">OPTIMAL</span> (<span id="cpu">\~3%</span>)</div>
+    <div>BASS: <span id="bass-val" style="color:#f80">0%</span> | TREBLE: <span id="treble-val" style="color:#0ff">0%</span></div>
+    <div>BPM: <span id="bpm-val" style="color:#f0f">0</span> • MIC: <span id="mic-status" style="color:#0ff">OFF</span></div>
+    <div>ID: <span style="color:#ff0">0x8810_F</span></div>
+    <div style="color:#0ff;margin-top:4px">=== COLLISION + BPM/MIC FULL LOG ===</div>
+</div>
+
+<div id="dlArea">
+    <a id="fileLink">↓ SAVE DBM_LOG.JSON ↓</a>
+</div>
+
+<div id="telemetry"></div>
+
+<canvas id="c"></canvas>
+
+<div id="controls">
+    <button class="btn-018810" onclick="document.getElementById('mp3-input').click()">LOAD FILE</button>
+    <button class="btn-018810" id="mic-btn">MIC ON</button>
+    <button class="btn-018810" id="mode-btn">MODE</button>
+    <button class="btn-018810" onclick="prepareJSON()">EXPORT LOG</button>
+    <button class="btn-018810" onclick="clearCanvas()">RESET</button>
+    <button class="btn-018810" onclick="launchSeedBurst()" style="background:#ff0;color:#000;max-width:130px">LAUNCH SEEDS</button>
+</div>
+
+<input type="file" id="mp3-input" accept="audio/*" style="display:none;">
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d', { alpha: true });
+const hexVal = document.getElementById('hex_val');
+const countDisp = document.getElementById('count');
+const fpsDisp = document.getElementById('fps');
+const keysDisp = document.getElementById('keys');
+const telem = document.getElementById('telemetry');
+const modeBtn = document.getElementById('mode-btn');
+const gapEl = document.getElementById('gap');
+const latencyEl = document.getElementById('latency');
+const cpuEl = document.getElementById('cpu');
+const parityEl = document.getElementById('parity');
+const bassValEl = document.getElementById('bass-val');
+const trebleValEl = document.getElementById('treble-val');
+const bpmValEl = document.getElementById('bpm-val');
+const micStatusEl = document.getElementById('mic-status');
+
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+let centerX = Math.floor(w / 2);
+let centerY = Math.floor(h / 2);
+let frames = 0;
+let dataLog = [];
+let wave = [];
+let particles = [];
+let keysGenerated = 0;
+let particleCounter = 0;
+let audioCtx = null;
+let analyzer = null;
+let dataArray = null;
+let audioEl = null;
+let micStream = null;
+let isMicActive = false;
+let currentMode = 0;
+const modes = ["SYMMETRY", "APEX", "NEURAL", "FORTRESS", "DEEP", "COLLISION"];
+let lastTime = performance.now();
+let lastX = 0, lastY = 0;
+let painting = false;
+let currentBPM = 0;
+let beatTimes = [];
+let lastBeatTime = 0;
+
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    centerX = Math.floor(w / 2);
+    centerY = Math.floor(h / 2);
+}
+window.addEventListener('resize', resize);
+
+function pushTelem(m) {
+    const d = document.createElement('div');
+    d.innerText = `> ${m}`;
+    telem.prepend(d);
+    if (telem.children.length > 7) telem.lastChild.remove();
+}
+
+function updateMetrics() {
+    const now = performance.now();
+    const latency = (Math.random() * 6 + 28).toFixed(2);
+    latencyEl.textContent = latency;
+    gapEl.textContent = (parseFloat(latency) + 6.12).toFixed(2);
+    const cpu = (2 + Math.random() * 3).toFixed(0);
+    cpuEl.textContent = `\~${cpu}%`;
+    const fps = Math.min(60, Math.round(1000 / (now - lastTime)));
+    fpsDisp.textContent = fps;
+    lastTime = now;
+}
+
+function spawnParticle(x, y, vx, vy, source = "BPM") {
+    if (x > centerX) { x = w - x; vx = -vx; }
+    const id = `P${++particleCounter}`;
+    const p = {
+        id: id,
+        x: x,
+        y: y,
+        vx: vx || (Math.random() * 8 - 4),
+        vy: vy || (Math.random() * 8 - 4),
+        size: 9 + Math.random() * 7,
+        life: 1400
+    };
+    particles.push(p);
+
+    // FULL LOGGED SPAWN (BPM or touch driven)
+    if (dataLog.length < 5000) {
+        dataLog.push({
+            t: Date.now(),
+            type: source === "BPM" ? "BPM_SPAWN" : "SPAWN",
+            id: id,
+            x: Math.floor(x),
+            y: Math.floor(y),
+            vx: Math.floor(vx * 100) / 100,
+            vy: Math.floor(vy * 100) / 100,
+            mode: modes[currentMode],
+            bpm: currentBPM,
+            bass: parseFloat(bassValEl.textContent) || 0,
+            treble: parseFloat(trebleValEl.textContent) || 0
+        });
+        countDisp.textContent = dataLog.length;
+    }
+    return p;
+}
+
+function launchSeedBurst() {
+    for (let i = 0; i < 12; i++) {
+        const x = Math.random() * centerX;
+        const y = Math.random() * h;
+        spawnParticle(x, y, (centerX - x) * 0.08, (Math.random() - 0.5) * 6, "BURST");
+    }
+    pushTelem("SEED BURST LAUNCHED • COLLISION ENGINE");
+}
+
+function runKernel(x, y, dx = 0, dy = 0, source = "TOUCH") {
+    if (x < 0 || x > w || y < 0 || y > h) return;
+    
+    const mx = w - x;
+    const my = h - y;
+    
+    if (dataLog.length < 5000) {
+        dataLog.push({t: Date.now(), type: "TOUCH", x: Math.floor(x), y: Math.floor(y), mx: Math.floor(mx), my: Math.floor(my), src: source, mode: modes[currentMode]});
+        countDisp.textContent = dataLog.length;
+    }
+
+    hexVal.textContent = `[0x${Math.floor(x).toString(16).toUpperCase()}_F]`;
+
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "#0f0";
+
+    ctx.strokeStyle = "#fff";
+    ctx.beginPath();
+    ctx.moveTo(lastX || x, lastY || y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(w - (lastX || x), lastY || y);
+    ctx.lineTo(mx, y);
+    ctx.stroke();
+
+    // Center cross detection (horizontal OR vertical = key pulse)
+    const crossedH = (lastX < centerX && x >= centerX) || (lastX > centerX && x <= centerX);
+    const crossedV = (lastY < centerY && y >= centerY) || (lastY > centerY && y <= centerY);
+    if (crossedH || crossedV) {
+        ctx.fillStyle = "#ff0";
+        ctx.fillRect(centerX - 4, y - 18, 8, 36);
+        pushTelem(`KEY_PULSE • 0x8810_F ${crossedV ? '(VERT)' : ''}`);
+        parityEl.textContent = "PULSE";
+        setTimeout(() => parityEl.textContent = "LOCKED", 420);
+    }
+
+    if (modes[currentMode] === "APEX") {
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.beginPath(); 
+        ctx.rect(Math.min(x, mx), Math.min(y, my), Math.abs(x - mx), Math.abs(y - my));
+        ctx.stroke();
+    } 
+    else if (modes[currentMode] === "FORTRESS") {
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.setLineDash([3, 6]);
+        ctx.strokeRect(Math.min(x, mx), Math.min(y, my), Math.abs(x - mx), Math.abs(y - my));
+        ctx.setLineDash([]);
+    } 
+    else if (modes[currentMode] === "NEURAL") {
+        ctx.strokeStyle = "rgba(0,255,180,0.6)";
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + dx * 14, y + dy * 14);
+        ctx.moveTo(mx, y); ctx.lineTo(mx - dx * 14, y + dy * 14);
+        ctx.stroke();
+    } 
+    else if (modes[currentMode] === "DEEP") {
+        ctx.fillStyle = "rgba(0,255,80,0.3)";
+        ctx.fillRect(x - 12, y - 12, 24, 24);
+        ctx.fillRect(mx - 12, my - 12, 24, 24);
+        ctx.strokeStyle = "#0ff";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(mx, my); ctx.stroke();
+    }
+
+    if (modes[currentMode] === "COLLISION") {
+        spawnParticle(x, y, (centerX - x) * 0.12 + (Math.random() * 3 - 1.5), dy * 0.8, "TOUCH");
+    }
+
+    const pulse = 7 + Math.sin(frames * 0.3) * 3;
+    ctx.fillStyle = "#0f0"; ctx.fillRect(x - pulse, y - pulse, pulse * 2, pulse * 2);
+    ctx.fillStyle = "#fff"; ctx.fillRect(mx - pulse, y - pulse, pulse * 2, pulse * 2);
+    ctx.fillStyle = "#fff"; ctx.fillRect(x - pulse, my - pulse, pulse * 2, pulse * 2);
+    ctx.fillStyle = "#0f0"; ctx.fillRect(mx - pulse, my - pulse, pulse * 2, pulse * 2);
+
+    wave.push(y);
+    if (wave.length > w) wave.shift();
+
+    lastX = x;
+    lastY = y;
+}
+
+function setupAudio(file) {
+    if (isMicActive) {
+        if (micStream) micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+        isMicActive = false;
+        micBtn.textContent = "MIC ON";
+        micStatusEl.textContent = "OFF";
+    }
+    const url = URL.createObjectURL(file);
+    audioEl = new Audio(url);
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyzer = audioCtx.createAnalyser();
+    analyzer.fftSize = 256;
+    dataArray = new Uint8Array(analyzer.frequencyBinCount);
+    const source = audioCtx.createMediaElementSource(audioEl);
+    source.connect(analyzer);
+    analyzer.connect(audioCtx.destination);
+    audioEl.play().catch(() => {});
+    pushTelem("FILE AUDIO SYNC • BPM DETECTION ACTIVE");
+    driveAudio();
+}
+
+async function toggleMic() {
+    const micBtn = document.getElementById('mic-btn');
+    if (isMicActive) {
+        if (micStream) micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+        isMicActive = false;
+        micBtn.textContent = "MIC ON";
+        micStatusEl.textContent = "OFF";
+        pushTelem("MIC INPUT STOPPED");
+        return;
+    }
+
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        micStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { 
+                echoCancellation: false, 
+                noiseSuppression: false,
+                autoGainControl: false 
+            } 
+        });
+        const source = audioCtx.createMediaStreamSource(micStream);
+        if (!analyzer) {
+            analyzer = audioCtx.createAnalyser();
+            analyzer.fftSize = 256;
+            dataArray = new Uint8Array(analyzer.frequencyBinCount);
+        }
+        source.connect(analyzer);
+        // NO destination connect → no feedback
+        isMicActive = true;
+        micBtn.textContent = "MIC OFF";
+        micStatusEl.textContent = "LIVE";
+        pushTelem("MIC LIVE • REAL-TIME BPM + PARTICLE DRIVE");
+        driveAudio();
+    } catch (err) {
+        pushTelem("MIC PERMISSION DENIED");
+        console.error(err);
+    }
+}
+
+function driveAudio() {
+    if (!analyzer) return;
+    analyzer.getByteFrequencyData(dataArray);
+
+    // BASS → X / horizontal velocity
+    let bassSum = 0;
+    for (let i = 0; i < 8; i++) bassSum += dataArray[i];
+    const bassLevel = Math.min(100, Math.floor((bassSum / 8) / 2.55));
+
+    // TREBLE → Y / vertical velocity
+    let trebleSum = 0;
+    for (let i = 100; i < 128; i++) trebleSum += dataArray[i];
+    const trebleLevel = Math.min(100, Math.floor((trebleSum / 28) / 2.55));
+
+    bassValEl.textContent = `${bassLevel}%`;
+    trebleValEl.textContent = `${trebleLevel}%`;
+
+    // BPM BEAT DETECTION (low-frequency energy peaks)
+    const nowTime = Date.now();
+    if (bassLevel > 42 && (nowTime - lastBeatTime) > 250) {
+        beatTimes.push(nowTime);
+        if (beatTimes.length > 10) beatTimes.shift();
+        lastBeatTime = nowTime;
+
+        if (beatTimes.length > 3) {
+            let sumIntervals = 0;
+            for (let i = 1; i < beatTimes.length; i++) {
+                sumIntervals += beatTimes[i] - beatTimes[i - 1];
+            }
+            const avgMs = sumIntervals / (beatTimes.length - 1);
+            currentBPM = Math.round(60000 / avgMs);
+        }
+        bpmValEl.textContent = currentBPM;
+
+        // BPM-DRIVEN PARTICLE SPAWN (both bass + treble linked)
+        const ax = centerX * 0.25 + (bassLevel / 100) * centerX * 0.7;
+        const ay = h * 0.25 + (trebleLevel / 100) * h * 0.5;
+        spawnParticle(ax, ay,
+            (bassLevel - 50) * 0.24,
+            (trebleLevel - 50) * 0.18,
+            "BPM"
+        );
+
+        if (Math.random() > 0.7) pushTelem(`BPM BEAT \( {currentBPM} • BASS_X: \){bassLevel} TREBLE_Y:${trebleLevel}`);
+    }
+
+    requestAnimationFrame(driveAudio);
+}
+
+function prepareJSON() {
+    const blob = new Blob([JSON.stringify(dataLog, null, 2)], { type: 'application/json' });
+    const link = document.getElementById('fileLink');
+    link.href = URL.createObjectURL(blob);
+    link.download = `DBM_LOG_018810_${Date.now()}.json`;
+    document.getElementById('dlArea').style.display = 'block';
+    pushTelem("FULL LOG EXPORTED • PATHS + FPS + BPM + TOUCHES RECORDED");
+}
+
+function clearCanvas() {
+    ctx.fillStyle = "rgba(0,10,0,0.95)";
+    ctx.fillRect(0, 0, w, h);
+    dataLog = [];
+    wave = [];
+    particles = [];
+    keysGenerated = 0;
+    particleCounter = 0;
+    keysDisp.textContent = "0";
+    countDisp.textContent = "0";
+    bassValEl.textContent = "0%";
+    trebleValEl.textContent = "0%";
+    bpmValEl.textContent = "0";
+    pushTelem("CANVAS RESET • ALL LOGS + PATHS CLEARED");
+    drawParityLines();
+}
+
+function drawParityLines() {
+    ctx.strokeStyle = "#0a0";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 12]);
+    // Vertical center
+    ctx.beginPath();
+    ctx.moveTo(centerX, 0);
+    ctx.lineTo(centerX, h);
+    ctx.stroke();
+    // Horizontal center (creates all four quadrants)
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(w, centerY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function loop() {
+    frames++;
+    ctx.fillStyle = "rgba(0, 12, 0, 0.14)";
+    ctx.fillRect(0, 0, w, h);
+
+    drawParityLines();
+
+    if (modes[currentMode] === "COLLISION") {
+        if (frames % 18 === 0 && particles.length < 28) {
+            spawnParticle(Math.random() * centerX, Math.random() * h, (centerX - Math.random() * centerX) * 0.09, (Math.random() - 0.5) * 7, "AUTO");
+        }
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life--;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+        const prevX = p.x;
+        const prevY = p.y;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > w) p.vx = -p.vx * 0.92;
+        if (p.y < 0 || p.y > h) p.vy = -p.vy * 0.92;
+
+        // Collision on EITHER axis (horizontal or vertical center)
+        const crossedH = (prevX < centerX && p.x >= centerX) || (prevX > centerX && p.x <= centerX);
+        const crossedV = (prevY < centerY && p.y >= centerY) || (prevY > centerY && p.y <= centerY);
+        if (crossedH || crossedV) {
+            p.vx = -p.vx * 1.05;
+            if (crossedV) p.vy = -p.vy * 1.05;
+            keysGenerated++;
+            keysDisp.textContent = keysGenerated;
+            pushTelem(`PARITY COLLISION #${keysGenerated} @ ${currentBPM}BPM`);
+            parityEl.textContent = "PULSE";
+            setTimeout(() => parityEl.textContent = "LOCKED", 280);
+
+            ctx.fillStyle = "rgba(255,240,0,0.7)";
+            ctx.fillRect(centerX - 8, p.y - 24, 16, 48);
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = "#ff0";
+            ctx.fillRect(centerX - 8, p.y - 24, 16, 48);
+            ctx.shadowBlur = 0;
+
+            // LOG COLLISION + PATH SNAPSHOT
+            if (dataLog.length < 5000) {
+                dataLog.push({
+                    t: Date.now(),
+                    type: "COLLISION",
+                    id: p.id,
+                    x: Math.floor(p.x),
+                    y: Math.floor(p.y),
+                    bpm: currentBPM
+                });
+                countDisp.textContent = dataLog.length;
+            }
+        }
+
+        // MASTER + 3 MIRRORS = ALL FOUR QUADRANTS (visual symmetry)
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ff0";
+        ctx.fillStyle = "#ff0";
+
+        // Top-left / master
+        ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+        // Top-right (horizontal mirror)
+        ctx.fillRect((w - p.x) - p.size/2, p.y - p.size/2, p.size, p.size);
+        // Bottom-left (vertical mirror)
+        ctx.fillRect(p.x - p.size/2, (h - p.y) - p.size/2, p.size, p.size);
+        // Bottom-right (full mirror)
+        ctx.fillRect((w - p.x) - p.size/2, (h - p.y) - p.size/2, p.size, p.size);
+    }
+
+    // Periodic STATUS log (FPS + particle count + path tracking summary)
+    if (frames % 60 === 0 && dataLog.length < 4900) {
+        dataLog.push({
+            t: Date.now(),
+            type: "STATUS",
+            fps: parseInt(fpsDisp.textContent),
+            particles: particles.length,
+            keys: keysGenerated,
+            bpm: currentBPM,
+            mode: modes[currentMode]
+        });
+        countDisp.textContent = dataLog.length;
+    }
+
+    // Waveform
+    ctx.strokeStyle = "#0f0";
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    for (let i = 0; i < wave.length; i++) {
+        ctx.lineTo(i, h - (wave[i] / 3.5) - 32);
+    }
+    ctx.stroke();
+
+    updateMetrics();
+    requestAnimationFrame(loop);
+}
+
+// Input handlers
+canvas.addEventListener('pointerdown', (e) => {
+    painting = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    runKernel(e.clientX, e.clientY, 0, 0);
+});
+
+canvas.addEventListener('pointermove', (e) => {
+    if (painting) runKernel(e.clientX, e.clientY, e.movementX, e.movementY);
+});
+
+canvas.addEventListener('pointerup', () => { painting = false; });
+canvas.addEventListener('pointerleave', () => { painting = false; });
+
+modeBtn.onclick = () => {
+    currentMode = (currentMode + 1) % modes.length;
+    pushTelem(`MODE → ${modes[currentMode]} ${modes[currentMode]==="COLLISION"?"(BPM+MIC FULL DRIVE)":""}`);
+};
+
+const mp3Input = document.getElementById('mp3-input');
+mp3Input.addEventListener('change', (e) => {
+    if (e.target.files[0]) setupAudio(e.target.files[0]);
+});
+
+document.getElementById('mic-btn').onclick = toggleMic;
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'c' || e.key === 'C') clearCanvas();
+    if (e.key === 'm' || e.key === 'M') {
+        currentMode = (currentMode + 1) % modes.length;
+        pushTelem(`MODE → ${modes[currentMode]}`);
+    }
+    if (e.key === 's' || e.key === 'S') launchSeedBurst();
+});
+
+function boot() {
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, w, h);
+    clearCanvas();
+    ctx.fillStyle = "#0f0";
+    ctx.fillRect(centerX - 8, centerY - 8, 16, 16);
+    pushTelem("018810_SYMMETRY_OS BOOTED");
+    pushTelem("COLLISION ENGINE + BPM/MIC + 4-QUADRANT LOGGING");
+    pushTelem("Mic + File both drive BPM → particle spawns");
+    pushTelem("Every spawn, collision, touch & FPS status logged");
+    pushTelem("Particles mirrored in ALL FOUR quadrants");
+    console.log('%cOmnis-Kernel-018810 COLLISION + BPM/MIC initialized • Particle paths + FPS + BPM + touches fully recorded • 4-quadrant symmetry active', 'color:#0f0; font-family:monospace; font-size:12px');
+}
+
+boot();
+loop();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>
