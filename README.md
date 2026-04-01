@@ -1,20 +1,23 @@
-# Omnis-Kernel-018810
-# Omnis-Kernel-018810 
+# Omnis-Kernel-018810 🚀
 
-### ⚠️ HIGH-LEVEL PROPRIETARY ASSET: NO ACCESS GRANTED
+**GEOMETRIC PARITY LAYER** - 300-node audio-reactive PWA helix engine
+Mobile-first • Collision physics • Real-time BPM sync • Exportable data logs
 
-This repository contains the **018810 Symmetric Geometric Parity Logic**. This is a closed-loop diagnostic framework for high-fidelity kinetic sensor analysis.
+## Features
+- **Triple helix layers** (outer/mid/inner) with perfect left/right parity mirror
+- **Audio-reactive rotation** + bass/treble/BPM particle spawning  
+- **Collision engine** detects parity line crossings (KEYS counter)
+- **Full data logging** (every spawn, collision, audio metric)
+- **PWA installable** - fullscreen Android app experience
+- **Touch/motion** kernel interaction
 
-## 🛑 RESTRICTIONS
-* **NO USE:** Use of this code for any purpose, commercial or personal, is strictly prohibited.
-* **NO COPY:** Mirroring, forking, or duplicating this logic is a violation of proprietary rights.
-* **NO DISTRIBUTION:** The code herein is for private diagnostic verification only.
+## Controls
+- **LOAD FILE** - Audio analysis + visualization
+- **MIC ON** - Live input reactive 
+- **MODE** - Cycle rendering modes
+- **LAUNCH SEEDS** - Particle burst
+- **C** - Reset • **M** - Mode • **S** - Seeds
 
-## CORE SPECS
-* **Logic Type:** Geometric Parity (Non-Linear)
-* **Kernel:** 018810-APEX
-* **Interface:** Standalone PWA / GPU-Accelerated
-* **Data Format:** Secure Forensic .JSON
-
----
-**CONFIDENTIALITY NOTICE:** The geometric data structures and non-linear compression methods utilized in this repository represent a break in standard Shannon entropy limits. Unauthorized access is strictly monitored.
+## Install
+1. Add to home screen
+2. Runs fullscreen, offline-capable
