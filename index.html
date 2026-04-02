@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Omnis-Kernel-018810</title>
+    <style>
+        :root { --glow: #0f0; --bg: #000; --dim: rgba(0,25,0,0.92); }
+        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin:0; padding:0; background:var(--bg); color:var(--glow); 
+            font-family:monospace; overflow:hidden; height:100vh; width:100vw;
+        }
+        #kernel-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px; height: 320px;
+            border: 2px solid #0f0;
+            background: rgba(0,20,0,0.6);
+            box-shadow: 0 0 30px #0f0;
+            overflow: hidden;
+        }
+        canvas { display: block; image-rendering: pixelated; }
+        #hud {
+            position:absolute; top:0; left:0; width:100%; 
+            background:var(--dim); border-bottom:2px solid #0f0; 
+            padding:6px 10px; font-size:10px; z-index:1000; 
+            display:grid; grid-template-columns: 1fr auto 1fr; align-items:center;
+        }
+        #controls {
+            position: absolute; bottom: 0; left: 0; width: 100%; 
+            height: 100px; background: rgba(0,15,0,0.95);
+            border-top: 2px solid #0f0; display: flex;
+            justify-content: center; align-items: center; gap: 14px; z-index: 2000;
+        }
+        .btn-018810 {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: #0f0; color: #000; border: none;
+            font-size: 16px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 12px #0f0; cursor: pointer;
+        }
+        #status-overlay {
+            position:absolute; top:52px; right:8px; background:rgba(0,20,0,0.9); 
+            padding:8px; border:1px solid #0f0; font-size:9px; line-height:1.3;
+            pointer-events:none; z-index:900; width:150px;
+        }
+        #missionComplete {
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            background:rgba(0,30,0,0.98); border:3px solid #0f0; padding:20px;
+            text-align:center; z-index:3000; display:none; width:90%;
+        }
+        .report-btn { 
+            background:#0f0; color:#000; border:none; padding:10px; 
+            margin:5px; width:100%; font-weight:bold; font-family:monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div id="hud">
+    <div>NODE: <span style="color:#ff0">018810_ULTIMA</span><br>BUFF: <span id="count">0</span>/20k</div>
+    <div id="hex_val" style="font-size:16px; color:#fff;">[0x8810_PHI]</div>
+    <div style="text-align:right;">FPS: <span id="fps">60</span><br>D8 16-WAY</div>
+</div>
+
+<div id="kernel-container">
+    <canvas id="c" width="320" height="320"></canvas>
+</div>
+
+<div id="status-overlay">
+    <div>BASS: <span id="bass-val" style="color:#f80">0%</span></div>
+    <div>MID: <span id="mid-val" style="color:#0f0">0%</span> | TREB: <span id="treble-val" style="color:#0ff">0%</span></div>
+    <div>SYNC: <span id="bpm-val">NEURAL</span> • RMS: <span id="rms-val">0</span></div>
+    <div>PHI: 1.618033</div>
+</div>
+
+<div id="missionComplete">
+    <h2 style="color:#ff0">MISSION SUCCESS</h2>
+    <p>GEOMETRIC PARITY CAPTURED</p>
+    <button class="report-btn" onclick="downloadMissionReport()">HTML MISSION REPORT</button>
+    <button class="report-btn" onclick="downloadCSV()">CSV DATA EXPORT</button>
+    <button class="report-btn" onclick="location.reload()" style="background:#fff">REBOOT KERNEL</button>
+</div>
+
+<div id="controls">
+    <button class="btn-018810" onclick="document.getElementById('mp3-input').click()">♪</button>
+    <button class="btn-018810" id="mic-btn" onclick="initAudio(null, true)">🎤</button>
+    <button class="btn-018810" onclick="launchSeedBurst()">★</button>
+    <button class="btn-018810" onclick="toggleD8Lines()">◯</button>
+    <button class="btn-018810" onclick="clearCanvas()">⟳</button>
+</div>
+
+<input type="file" id="mp3-input" accept="audio/*" style="display:none;">
+
+<script>
+// ==================== KERNEL 018810 PHYSICS CORE ====================
+const PHI = (1 + Math.sqrt(5)) / 2;
+const GA = Math.PI * (3 - Math.sqrt(5)); // Golden Angle
+const nodes = [];
+let dataLog = [], particles = [], rotationAngle = 0;
+let audioCtx, analyzer, freqData, audioEl = null;
+let showD8Lines = true, painting = false;
+
+// Generate 300 Fibonacci-Lattice Points
+for(let i=0; i<300; i++) {
+    nodes.push({
+        id: i,
+        parity: (i % 2 === 0) ? 1 : -1,
+        z_offset: (i / 150) - 1, 
+        radius_multi: Math.sqrt(i / 300)
+    });
+}
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d', { alpha: false });
+const centerX = 160, centerY = 160;
+
+// ==================== D8 SYMMETRY ENGINE ====================
+function getD8Symmetries(x, y) {
+    const dx = x - centerX, dy = y - centerY;
+    const sym = [];
+    for (let k = 0; k < 8; k++) {
+        const theta = k * Math.PI / 4;
+        const c = Math.cos(theta), s = Math.sin(theta);
+        const rx = dx * c - dy * s, ry = dx * s + dy * c;
+        sym.push({x: centerX + rx, y: centerY + ry});
+        sym.push({x: centerX + rx, y: centerY - ry});
+    }
+    return sym;
+}
+
+function spawnParticle(x, y, force = 5) {
+    const mirrors = getD8Symmetries(x, y);
+    const bass = parseInt(document.getElementById('bass-val').textContent) || 0;
+    
+    mirrors.forEach(m => {
+        particles.push({
+            x: m.x, y: m.y,
+            vx: (Math.random()-0.5) * force,
+            vy: (Math.random()-0.5) * force,
+            size: 2 + (bass / 50),
+            life: 100
+        });
+    });
+
+    if (dataLog.length < 20000) {
+        dataLog.push({t: Date.now(), x: Math.floor(x), y: Math.floor(y), b: bass});
+        document.getElementById('count').textContent = dataLog.length;
+    }
+}
+
+// ==================== RENDER LOOP ====================
+function render() {
+    ctx.fillStyle = "rgba(0,10,0,0.15)"; // Motion trail
+    ctx.fillRect(0,0,320,320);
+
+    const bass = parseInt(document.getElementById('bass-val').textContent) || 0;
+    const time = Date.now() * 0.001;
+    rotationAngle += 0.01 + (bass / 1000);
+
+    // 1. Render Fibonacci Spine
+    nodes.forEach((n, i) => {
+        let lon = GA * i + (time * n.parity);
+        let lat = Math.asin(n.z_offset);
+        
+        let x3d = Math.cos(lon) * Math.cos(lat);
+        let y3d = Math.sin(lon) * Math.cos(lat);
+        
+        let scale = 80 + (bass / 2);
+        let sx = centerX + x3d * scale;
+        let sy = centerY + y3d * scale;
+
+        ctx.fillStyle = n.parity === 1 ? "#0f0" : "#fff";
+        ctx.fillRect(sx, sy, 2, 2);
+
+        if(showD8Lines && bass > 180 && i % 15 === 0) {
+            ctx.strokeStyle = "rgba(0,255,0,0.3)";
+            ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(centerX, centerY); ctx.stroke();
+        }
+    });
+
+    // 2. Render D8 Particles
+    for (let i=particles.length-1; i>=0; i--) {
+        const p = particles[i];
+        p.life--; p.x += p.vx; p.y += p.vy;
+        if (p.life <= 0) { particles.splice(i,1); continue; }
+        ctx.fillStyle = "#0f0";
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+    }
+
+    requestAnimationFrame(render);
+}
+
+// ==================== AUDIO LOGIC ====================
+async function initAudio(file, isMic = false) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    analyzer = audioCtx.createAnalyser();
+    analyzer.fftSize = 256;
+    freqData = new Uint8Array(analyzer.frequencyBinCount);
+
+    if (isMic) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyzer);
+        document.getElementById('bpm-val').textContent = "LIVE_MIC";
+    } else {
+        audioEl = new Audio(URL.createObjectURL(file));
+        const source = audioCtx.createMediaElementSource(audioEl);
+        source.connect(analyzer);
+        analyzer.connect(audioCtx.destination);
+        audioEl.onended = () => document.getElementById('missionComplete').style.display = 'block';
+        audioEl.play();
+    }
+    driveAudio();
+}
+
+function driveAudio() {
+    if (!analyzer) return;
+    analyzer.getByteFrequencyData(freqData);
+    let b=0, m=0, t=0, rms=0;
+    for(let i=0; i<4; i++) b += freqData[i];
+    for(let i=4; i<16; i++) m += freqData[i];
+    for(let i=16; i<32; i++) t += freqData[i];
+    for(let i=0; i<freqData.length; i++) rms += freqData[i]**2;
+
+    document.getElementById('bass-val').textContent = Math.floor(b/4/2.55) + "%";
+    document.getElementById('mid-val').textContent = Math.floor(m/12/2.55) + "%";
+    document.getElementById('treble-val').textContent = Math.floor(t/16/2.55) + "%";
+    document.getElementById('rms-val').textContent = (Math.sqrt(rms/freqData.length)/255).toFixed(2);
+    
+    if (b/4 > 200) launchSeedBurst(); // Autospawn on drop
+
+    requestAnimationFrame(driveAudio);
+}
+
+// ==================== CONTROLS ====================
+function launchSeedBurst() {
+    for (let i=0; i<8; i++) spawnParticle(centerX, centerY, 12);
+}
+function toggleD8Lines() { showD8Lines = !showD8Lines; }
+function clearCanvas() { dataLog = []; particles = []; document.getElementById('count').textContent = "0"; }
+
+canvas.addEventListener('pointermove', e => {
+    const rect = canvas.getBoundingClientRect();
+    spawnParticle(e.clientX - rect.left, e.clientY - rect.top, 4);
+});
+
+document.getElementById('mp3-input').onchange = e => initAudio(e.target.files[0]);
+
+// ==================== REPORTS ====================
+function downloadMissionReport() {
+    let h = `<html><body style="background:#000;color:#0f0;font-family:monospace;"><h1>018810 MISSION LOG</h1><table border="1">`;
+    h += `<tr><th>TIME</th><th>X</th><th>Y</th><th>BASS</th></tr>`;
+    dataLog.forEach(d => h += `<tr><td>${d.t}</td><td>${d.x}</td><td>${d.y}</td><td>${d.b}%</td></tr>`);
+    h += `</table></body></html>`;
+    const b = new Blob([h], {type:'text/html'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = `018810_REPORT.html`; a.click();
+}
+
+function downloadCSV() {
+    let c = "t,x,y,bass\n";
+    dataLog.forEach(d => c += `${d.t},${d.x},${d.y},${d.b}\n`);
+    const b = new Blob([c], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = `018810_DATA.csv`; a.click();
+}
+
+render();
+
+// ==================== SERVICE WORKER ====================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Fail'));
+    });
+}
+</script>
+</body>
+</html>
