@@ -1,7 +1,8 @@
-const CACHE_NAME = 'Omnis-Kernel-018810-v7';
+const CACHE_NAME = 'Omnis-Kernel-018810-v8';
 
 const ASSETS = [
   './',
+  './Omnis-Kernel.mp3',
   './icon.png',
   './index.html',
   './manifest.json',        // ← add this
