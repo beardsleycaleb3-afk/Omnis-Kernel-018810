@@ -35,12 +35,12 @@
             position: absolute; bottom: 0; left: 0; width: 100%; 
             height: 100px; background: rgba(0,15,0,0.95);
             border-top: 2px solid #0f0; display: flex;
-            justify-content: center; align-items: center; gap: 14px; z-index: 2000;
+            justify-content: center; align-items: center; gap: 5px; z-index: 2000;
         }
         .btn-018810 {
-            width: 34px; height: 34px; border-radius: 50%;
+            width: 54px; height: 25px; border-radius: 50%;
             background: #0f0; color: #000; border: none;
-            font-size: 16px; font-weight: bold;
+            font-size: 26px; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 0 12px #0f0; cursor: pointer;
         }
@@ -63,9 +63,9 @@
 <body>
 
 <div id="hud">
-    <div>NODE: <span style="color:#ff0">018810_ULTIMA</span><br>BUFF: <span id="count">0</span>/20k</div>
+    <div>NODE: <span style="color:#ff0">Mirror</span><br>BUFF: <span id="count">0</span>/20k</div>
     <div id="hex_val" style="font-size:16px; color:#fff;">[0x8810_PHI]</div>
-    <div style="text-align:right;">FPS: <span id="fps">60</span><br>D8 16-WAY</div>
+    <div style="text-align:right;">FPS: <span id="fps">60</span><br></div>
 </div>
 
 <div id="kernel-container">
@@ -88,11 +88,11 @@
 </div>
 
 <div id="controls">
-    <button class="btn-018810" onclick="document.getElementById('mp3-input').click()">♪</button>
-    <button class="btn-018810" id="mic-btn" onclick="initAudio(null, true)">🎤</button>
-    <button class="btn-018810" onclick="launchSeedBurst()">★</button>
-    <button class="btn-018810" onclick="toggleD8Lines()">◯</button>
-    <button class="btn-018810" onclick="clearCanvas()">⟳</button>
+    <button class="btn-018810" onclick="document.getElementById('mp3-input').click()">♪🎧</button>
+    <button class="btn-018810" id="mic-btn" onclick="initAudio(null, true)">🌶️</button>
+    <button class="btn-018810" onclick="launchSeedBurst()">👻</button>
+    <button class="btn-018810" onclick="toggleD8Lines()">🪬</button>
+    <button class="btn-018810" onclick="clearCanvas()">🫥</button>
 </div>
 
 <input type="file" id="mp3-input" accept="audio/*" style="display:none;">
